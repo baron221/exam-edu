@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("student")
+  accounts      Account[]
+  sessions      Session[]
+  attempts      ExamAttempt[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  exams       Exam[]
+}
+
+model Exam {
+  id           String         @id @default(cuid())
+  courseId     String
+  title        String
+  description  String?
+  type         ExamType       @default(MIDTERM)
+  timeLimit    Int            @default(60)
+  passingScore Int            @default(60)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attempts     ExamAttempt[]
+  questions    ExamQuestion[]
+
+  @@index([courseId])
+}
+
+model ExamQuestion {
+  id          String         @id @default(cuid())
+  examId      String
+  type        QuestionType   @default(MCQ)
+  text        String
+  explanation String?
+  order       Int            @default(0)
+  points      Int            @default(1)
+  language    String?        @default("cpp")
+  starterCode String?
+  testCases   Json?
+  options     ExamOption[]
+  exam        Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  responses   ExamResponse[]
+
+  @@index([examId])
+}
+
+model ExamOption {
+  id         String       @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean      @default(false)
+  question   ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model ExamAttempt {
+  id           String         @id @default(cuid())
+  examId       String
+  userId       String
+  startTime    DateTime       @default(now())
+  submittedAt  DateTime?
+  score        Float          @default(0)
+  status       String         @default("IN_PROGRESS")
+  warningCount Int            @default(0)
+  exam         Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses    ExamResponse[]
+
+  @@unique([userId, examId])
+  @@index([examId])
+  @@index([userId])
+}
+
+model ExamResponse {
+  id           String       @id @default(cuid())
+  attemptId    String
+  questionId   String
+  answer       String
+  isCorrect    Boolean?
+  pointsEarned Float        @default(0)
+  feedback     String?
+  attempt      ExamAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question     ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+}
+
+enum ExamType {
+  MIDTERM
+  FINAL
+}
+
+enum QuestionType {
+  MCQ
+  CODING
+}
