@@ -88,6 +88,8 @@ export const translations = {
     custom_output: "Standart chiqish (stdout)",
     stdin_placeholder: "cin/scanf uchun kiruvchi ma'lumotlarni kiriting...",
     clear: "Tozalash",
+    confirm_submit: "Imtihonni topshirishni tasdiqlaysizmi?",
+    waiting_for_execution: "Natija kutilmoqda...",
     
     // Errors
     error_load_exam: "Imtihonni yuklashda xatolik yuz berdi.",
@@ -189,6 +191,8 @@ export const translations = {
     custom_output: "Стандартный вывод (stdout)",
     stdin_placeholder: "Введите данные для cin/scanf сюда...",
     clear: "Очистить",
+    confirm_submit: "Вы уверены, что хотите сдать экзамен?",
+    waiting_for_execution: "Ожидание выполнения...",
     
     // Errors
     error_load_exam: "Ошибка при загрузке экзамена.",
@@ -290,6 +294,8 @@ export const translations = {
     custom_output: "Standard Output (stdout)",
     stdin_placeholder: "Type inputs for cin/scanf here...",
     clear: "Clear",
+    confirm_submit: "Are you sure you want to submit the exam?",
+    waiting_for_execution: "Waiting for execution...",
     
     // Errors
     error_load_exam: "Failed to load exam.",
