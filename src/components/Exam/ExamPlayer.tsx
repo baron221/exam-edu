@@ -326,44 +326,48 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                               <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                               <div className="text-[10px] uppercase tracking-widest">{t('compiling')}</div>
                             </div>
-                          ) : judgeResult ? (
-                            <>
-                              {(() => {
-                                  const safeAtob = (str: string) => {
-                                      try { return atob(str); } catch (e) { return str; }
-                                  };
-                                  return (
-                                      <>
-                                          {judgeResult.stdout ? safeAtob(judgeResult.stdout) : ''}
-                                          {judgeResult.stderr ? safeAtob(judgeResult.stderr) : ''}
-                                          {judgeResult.compile_output ? safeAtob(judgeResult.compile_output) : ''}
-                                      </>
-                                  );
-                              })()}
-                              {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
-                              {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
-                            </>
                           ) : (
-                            <div className="flex items-center justify-center h-full opacity-20 italic text-[10px]">
-                              Waiting for execution...
-                            </div>
+                            <>
+                              <div className={styles.outputContent}>
+                                {judgeResult ? (
+                                  <>
+                                    {(() => {
+                                        const safeAtob = (str: string) => {
+                                            try { return atob(str); } catch (e) { return str; }
+                                        };
+                                        return (
+                                            <>
+                                                {judgeResult.stdout ? safeAtob(judgeResult.stdout) : ''}
+                                                {judgeResult.stderr ? safeAtob(judgeResult.stderr) : ''}
+                                                {judgeResult.compile_output ? safeAtob(judgeResult.compile_output) : ''}
+                                            </>
+                                        );
+                                    })()}
+                                    {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
+                                    {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
+                                  </>
+                                ) : (
+                                  <div className="opacity-20 italic text-[10px] mb-4">
+                                    Waiting for execution...
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className={styles.mergedInputArea}>
+                                <div className={styles.inputWrapper}>
+                                  <span className={styles.terminalPrompt}>$</span>
+                                  <textarea 
+                                    className={styles.terminalTextarea}
+                                    placeholder={t('stdin_placeholder')}
+                                    value={stdin}
+                                    rows={Math.max(1, stdin.split('\n').length)}
+                                    onChange={(e) => setStdin(e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                            </>
                           )}
                         </div>
-                      </div>
-
-                      <div className={styles.inputArea}>
-                        <div className={styles.panelLabel}>{t('custom_input')} <span className="opacity-40 italic ml-2 lowercase">(Enter all inputs before run)</span></div>
-                        <div className={styles.inputWrapper}>
-                           <span className={styles.terminalPrompt}>$</span>
-                           <textarea 
-                             className={styles.terminalTextarea}
-                             placeholder={t('stdin_placeholder')}
-                             value={stdin}
-                             rows={3}
-                             onChange={(e) => setStdin(e.target.value)}
-                           />
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>

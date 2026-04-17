@@ -332,12 +332,21 @@
 .terminalOutput {
   flex: 1;
   margin: 0;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.outputContent {
   color: #10b981;
   font-family: var(--font-mono), monospace;
   font-size: 0.75rem;
   line-height: 1.5;
   white-space: pre-wrap;
-  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.mergedInputArea {
+  margin-top: 4px;
 }
 
 .footer {
