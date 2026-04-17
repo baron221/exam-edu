@@ -274,7 +274,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                 
                 <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-white">
                   <MonacoEditor 
-                      theme="light"
+                      theme="vs-dark"
                       value={answers[currentQ.id] || currentQ.starterCode || ''} 
                       onChange={(val) => handleAnswer(currentQ.id, val || '')}
                       height="460px"

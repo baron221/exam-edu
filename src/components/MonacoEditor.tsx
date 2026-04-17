@@ -24,9 +24,9 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
     <div style={{ 
         borderRadius: '16px', 
         overflow: 'hidden', 
-        border: '1.5px solid #e2e8f0',
-        background: '#fff',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
+        border: theme === 'vs-dark' ? '1.5px solid #1e293b' : '1.5px solid #e2e8f0',
+        background: theme === 'vs-dark' ? '#1e293b' : '#fff',
+        boxShadow: theme === 'vs-dark' ? '0 10px 40px rgba(0,0,0,0.2)' : '0 4px 20px rgba(0,0,0,0.03)'
     }}>
       <Editor
         height={height}
