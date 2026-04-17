@@ -19,6 +19,7 @@ export default function ExamDetailPage() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [pendingQuestions, setPendingQuestions] = useState<any[]>([]);
   const [loadingBulk, setLoadingBulk] = useState(false);
+  const [aiQuestionCount, setAiQuestionCount] = useState(10);
 
   // Single Question Form
   const [qText, setQText] = useState('');
@@ -50,6 +51,27 @@ export default function ExamDetailPage() {
         toast.error('Failed to load exam details');
         setLoading(false);
     }
+  };
+
+  const updatePendingQuestion = (idx: number, updates: any) => {
+    const newQuestions = [...pendingQuestions];
+    newQuestions[idx] = { ...newQuestions[idx], ...updates };
+    setPendingQuestions(newQuestions);
+  };
+
+  const updatePendingOption = (qIdx: number, oIdx: number, text: string) => {
+    const newQuestions = [...pendingQuestions];
+    newQuestions[qIdx].options[oIdx].text = text;
+    setPendingQuestions(newQuestions);
+  };
+
+  const setPendingCorrect = (qIdx: number, oIdx: number) => {
+    const newQuestions = [...pendingQuestions];
+    newQuestions[qIdx].options = newQuestions[qIdx].options.map((o: any, idx: number) => ({
+      ...o,
+      isCorrect: idx === oIdx
+    }));
+    setPendingQuestions(newQuestions);
   };
 
   const handleAddQuestion = async (e: React.FormEvent) => {
@@ -124,7 +146,7 @@ export default function ExamDetailPage() {
     try {
         const res = await fetch('/api/admin/exams/generate-ai', {
             method: 'POST',
-            body: JSON.stringify({ prompt: aiPrompt, count: 10 })
+            body: JSON.stringify({ prompt: aiPrompt, count: aiQuestionCount })
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
@@ -250,7 +272,7 @@ export default function ExamDetailPage() {
 
         <div className={styles.sidebarCard}>
           <h3 className={styles.sideTitle}>
-            <Plus size={20} color="#6366f1" /> Manual Injection
+            <Plus size={16} color="#6366f1" /> Manual Injection
           </h3>
 
           <div className={styles.tabGroup}>
@@ -307,7 +329,7 @@ export default function ExamDetailPage() {
                         </div>
                         <div>
                             <h2 style={{ fontSize: 24, fontWeight: 950, margin: 0 }}>{bulkMode === 'AI' ? 'Magic AI Genesis' : 'Smart Protocol Import'}</h2>
-                            <p style={{ margin: 0, color: '#94a3b8', fontSize: 13, fontWeight: 700 }}>{bulkMode === 'AI' ? 'Leverage Gemini Pro for industrial-grade question synthesis.' : 'Parse raw educational text into structured database units.'}</p>
+                            <p style={{ margin: 0, color: '#94a3b8', fontSize: 13, fontWeight: 700 }}>{bulkMode === 'AI' ? 'Leverage Gemini 2.5 Flash for industrial-grade question synthesis.' : 'Parse raw educational text into structured database units.'}</p>
                         </div>
                     </div>
                     <button onClick={() => setShowBulkModal(false)} className={styles.deleteBtn} style={{ opacity: 1, color: '#94a3b8' }}>
@@ -320,7 +342,19 @@ export default function ExamDetailPage() {
                         <div className="space-y-6">
                             {bulkMode === 'AI' ? (
                                 <div className="space-y-4">
-                                    <label className={styles.label}>Synthesis Prompt</label>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label className={styles.label}>Synthesis Prompt</label>
+                                        <div className={styles.quantityControl}>
+                                            <span style={{ fontSize: 9, fontWeight: 900, color: '#cbd5e1' }}>REQ QTY:</span>
+                                            <input 
+                                              type="number" 
+                                              min="1" max="25" 
+                                              value={aiQuestionCount} 
+                                              onChange={e => setAiQuestionCount(parseInt(e.target.value) || 1)} 
+                                              className={styles.quantityInput} 
+                                            />
+                                        </div>
+                                    </div>
                                     <textarea 
                                         rows={8} 
                                         value={aiPrompt} 
@@ -358,16 +392,51 @@ export default function ExamDetailPage() {
 
                         <div>
                             <h3 style={{ fontSize: 12, fontWeight: 950, color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 20 }}>Staging Area ({pendingQuestions.length})</h3>
-                            <div className={styles.previewList} style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 8 }}>
+                            <div className={styles.previewList} style={{ maxHeight: 480, overflowY: 'auto', paddingRight: 8 }}>
                                 {pendingQuestions.length === 0 ? (
                                     <div className={styles.emptyState} style={{ height: 200, borderRadius: 24 }}>STAGING EMPTY</div>
-                                ) : pendingQuestions.map((pq, idx) => (
-                                    <div key={idx} className={styles.previewItem}>
-                                        <button onClick={() => setPendingQuestions(pendingQuestions.filter((_, i) => i !== idx))} className={styles.deleteBtn} style={{ position: 'absolute', top: 12, right: 12, opacity: 1 }}>
-                                            <Trash2 size={12} />
-                                        </button>
-                                        <div style={{ fontSize: 8, fontWeight: 950, color: '#4f46e5', marginBottom: 6 }}>{pq.type}</div>
-                                        <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>{pq.text.substring(0, 100)}{pq.text.length > 100 ? '...' : ''}</div>
+                                ) : pendingQuestions.map((pq, qIdx) => (
+                                    <div key={qIdx} className={styles.stageCard}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <span className={styles.stageBadge}>{pq.type} Unit</span>
+                                            <button onClick={() => setPendingQuestions(pendingQuestions.filter((_, i) => i !== qIdx))} className={styles.deleteBtn} style={{ opacity: 1 }}>
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                        
+                                        <input 
+                                          className={styles.stageInput} 
+                                          value={pq.text} 
+                                          onChange={e => updatePendingQuestion(qIdx, { text: e.target.value })} 
+                                        />
+
+                                        {pq.type === 'MCQ' && (
+                                          <div className="space-y-1">
+                                            {pq.options.map((opt: any, oIdx: number) => (
+                                              <div key={oIdx} className={styles.stageOptionRow}>
+                                                <CheckCircle2 
+                                                  size={14} 
+                                                  className={`${styles.stageOptionCheck} ${opt.isCorrect ? styles.active : ''}`}
+                                                  onClick={() => setPendingCorrect(qIdx, oIdx)}
+                                                />
+                                                <input 
+                                                  className={styles.stageOptionInput} 
+                                                  value={opt.text} 
+                                                  onChange={e => updatePendingOption(qIdx, oIdx, e.target.value)}
+                                                />
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {pq.type === 'CODING' && (
+                                          <textarea 
+                                            className={styles.stageOptionInput} 
+                                            style={{ fontFamily: 'monospace', color: '#10b981', background: '#1e293b', width: '100%', height: 80, marginTop: 8 }}
+                                            value={pq.starterCode}
+                                            onChange={e => updatePendingQuestion(qIdx, { starterCode: e.target.value })}
+                                          />
+                                        )}
                                     </div>
                                 ))}
                             </div>

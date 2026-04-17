@@ -397,3 +397,93 @@
 .splitView {
   gap: 24px;
 }
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 8px 16px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.quantityInput {
+  width: 50px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 800;
+  color: #6366f1;
+  text-align: center;
+  outline: none;
+}
+
+.stageCard {
+  background: #fff;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.stageCard:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.05);
+}
+
+.stageInput {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed transparent;
+}
+
+.stageInput:focus {
+  border-bottom-color: #e2e8f0;
+}
+
+.stageOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stageOptionInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.stageOptionCheck {
+  cursor: pointer;
+  color: #cbd5e1;
+  transition: color 0.2s;
+}
+
+.stageOptionCheck.active {
+  color: #10b981;
+}
+
+.stageBadge {
+  font-size: 7px;
+  font-weight: 950;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  display: block;
+}
