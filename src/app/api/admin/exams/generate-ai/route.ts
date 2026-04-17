@@ -62,31 +62,36 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const fullPrompt = `${SYSTEM_PROMPT}\n\nUser Request: Generate ${count} questions about: ${prompt}\n\nJSON Response:`;
+    const fullPrompt = `${SYSTEM_PROMPT}\n\nUser Request: Generate ${count} questions about: ${prompt}\n\nPlease return strictly JSON.`;
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
     
-    console.log("[AI_RAW_RESPONSE]", text);
-
-    // Robust JSON extraction: Find the first { and last }
-    const startIdx = text.indexOf('{');
-    const endIdx = text.lastIndexOf('}');
+    // Hardened JSON extraction: handle ```json ... ``` blocks
+    let jsonContent = text;
+    if (text.includes("```json")) {
+      jsonContent = text.split("```json")[1].split("```")[0];
+    } else if (text.includes("```")) {
+      jsonContent = text.split("```")[1].split("```")[0];
+    }
+    
+    const startIdx = jsonContent.indexOf('{');
+    const endIdx = jsonContent.lastIndexOf('}');
     
     if (startIdx === -1 || endIdx === -1) {
-      console.error("[AI_PARSE_ERROR] No JSON block found in response");
+      console.error("[AI_PARSE_ERROR] No valid JSON found", text);
       return NextResponse.json({ error: "AI returned invalid format. Please try again." }, { status: 500 });
     }
 
-    const jsonStr = text.substring(startIdx, endIdx + 1);
+    const finalJson = jsonContent.substring(startIdx, endIdx + 1);
     
     try {
-      const data = JSON.parse(jsonStr);
+      const data = JSON.parse(finalJson);
       return NextResponse.json(data);
     } catch (parseErr: any) {
-      console.error("[AI_JSON_PARSE_FAILED]", parseErr.message, "Raw JSON candidate:", jsonStr);
-      return NextResponse.json({ error: "Failed to parse AI response. The engine may be busy.", details: parseErr.message }, { status: 500 });
+      console.error("[AI_JSON_PARSE_FAILED]", parseErr.message, "Cleaned JSON:", finalJson);
+      return NextResponse.json({ error: "Failed to parse AI output. Please try again." }, { status: 500 });
     }
   } catch (error: any) {
     console.error("[AI_GEN_ERROR]", error);
