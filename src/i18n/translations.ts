@@ -59,6 +59,8 @@ export const translations = {
     no_data: "Ma'lumot mavjud emas",
     result: "Natija",
     exec_no_output: "Chiqish ma'lumoti mavjud bo'lmagan holda bajarildi.",
+    custom_input: "Maxsus kirish (stdin)",
+    custom_output: "Tizim chiqishi (stdout)",
     
     // Errors
     error_load_exam: "Imtihonni yuklashda xatolik yuz berdi.",
@@ -131,6 +133,8 @@ export const translations = {
     no_data: "Данные отсутствуют",
     result: "Результат",
     exec_no_output: "Выполнение завершено без вывода.",
+    custom_input: "Пользовательский ввод (stdin)",
+    custom_output: "Вывод системы (stdout)",
     
     // Errors
     error_load_exam: "Ошибка при загрузке экзамена.",
