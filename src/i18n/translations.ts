@@ -305,3 +305,16 @@ export const translations = {
     active_session: "ACTIVE SESSION"
   }
 };
+
+import { useParams } from 'next/navigation';
+
+export function useTranslation() {
+  const params = useParams();
+  const locale = (params?.locale as Locale) || 'uz';
+
+  const t = (key: keyof typeof translations['uz']) => {
+    return translations[locale][key] || translations['uz'][key] || key;
+  };
+
+  return { t, locale };
+}
