@@ -39,9 +39,12 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
   );
 };
 
-export default function ExamPlayer({ exam, attempt }: { exam: any; attempt: any }) {
+export default function ExamPlayer({ examId }: { examId: string }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const [exam, setExam] = useState<any>(null);
+  const [attempt, setAttempt] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [judging, setJudging] = useState(false);
@@ -49,18 +52,39 @@ export default function ExamPlayer({ exam, attempt }: { exam: any; attempt: any 
   const [stdin, setStdin] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Load saved answers from state or local storage if needed
+  // Fetch exam and attempt data
   useEffect(() => {
-    const savedAnswers = localStorage.getItem(`exam_answers_${exam.id}`);
-    if (savedAnswers) {
-      setAnswers(JSON.parse(savedAnswers));
+    async function fetchData() {
+      try {
+        const [examRes, attemptRes] = await Promise.all([
+          fetch(`/api/exams/${examId}`),
+          fetch(`/api/exams/${examId}/attempts/current`)
+        ]);
+        
+        const examData = await examRes.json();
+        const attemptData = await attemptRes.json();
+        
+        setExam(examData);
+        setAttempt(attemptData);
+        
+        // Load saved answers
+        const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
+        if (savedAnswers) {
+          setAnswers(JSON.parse(savedAnswers));
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [exam.id]);
+    fetchData();
+  }, [examId]);
 
   const handleAnswer = (questionId: string, value: string) => {
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
-    localStorage.setItem(`exam_answers_${exam.id}`, JSON.stringify(newAnswers));
+    localStorage.setItem(`exam_answers_${examId}`, JSON.stringify(newAnswers));
   };
 
   const runCode = async (sourceCode: string, input: string, language: string) => {
@@ -92,7 +116,7 @@ export default function ExamPlayer({ exam, attempt }: { exam: any; attempt: any 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
       });
-      localStorage.removeItem(`exam_answers_${exam.id}`);
+      localStorage.removeItem(`exam_answers_${examId}`);
       router.push('/dashboard');
     } catch (error) {
       console.error('Submit error:', error);
@@ -101,6 +125,10 @@ export default function ExamPlayer({ exam, attempt }: { exam: any; attempt: any 
       setSubmitting(false);
     }
   };
+
+  if (loading || !exam || !attempt) {
+    return <div className={styles.loadingOverlay}>{t('authenticating')}...</div>;
+  }
 
   const currentQ = exam.questions[currentIndex];
   const totalQuestions = exam.questions.length;
