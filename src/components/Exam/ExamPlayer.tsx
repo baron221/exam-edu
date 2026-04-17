@@ -295,18 +295,8 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                       )}
                     </div>
 
-                    <div className={styles.consoleSplit}>
-                      <div className={styles.inputPanel}>
-                        <div className={styles.panelLabel}>{t('custom_input')}</div>
-                        <textarea 
-                          className={styles.terminalTextarea}
-                          placeholder="Type input for cin/scanf here..."
-                          value={stdin}
-                          onChange={(e) => setStdin(e.target.value)}
-                        />
-                      </div>
-
-                      <div className={styles.outputPanel}>
+                    <div className={styles.terminalBody}>
+                      <div className={styles.outputArea}>
                         <div className={styles.panelLabel}>{t('custom_output')}</div>
                         <div className={styles.terminalOutput}>
                           {judging ? (
@@ -336,6 +326,19 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                               Waiting for execution...
                             </div>
                           )}
+                        </div>
+                      </div>
+
+                      <div className={styles.inputArea}>
+                        <div className={styles.panelLabel}>{t('custom_input')}</div>
+                        <div className={styles.inputWrapper}>
+                           <span className={styles.terminalPrompt}>$</span>
+                           <textarea 
+                             className={styles.terminalTextarea}
+                             placeholder="Type stdin for cin/scanf here..."
+                             value={stdin}
+                             onChange={(e) => setStdin(e.target.value)}
+                           />
                         </div>
                       </div>
                     </div>
