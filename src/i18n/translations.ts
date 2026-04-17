@@ -86,6 +86,7 @@ export const translations = {
     exec_no_output: "Chiqish ma'lumoti mavjud bo'lmagan holda bajarildi.",
     custom_input: "Standart kirish (stdin)",
     custom_output: "Standart chiqish (stdout)",
+    stdin_placeholder: "cin/scanf uchun kiruvchi ma'lumotlarni kiriting...",
     
     // Errors
     error_load_exam: "Imtihonni yuklashda xatolik yuz berdi.",
@@ -185,6 +186,7 @@ export const translations = {
     exec_no_output: "Выполнение завершено без вывода.",
     custom_input: "Стандартный ввод (stdin)",
     custom_output: "Стандартный вывод (stdout)",
+    stdin_placeholder: "Введите данные для cin/scanf сюда...",
     
     // Errors
     error_load_exam: "Ошибка при загрузке экзамена.",
@@ -284,6 +286,7 @@ export const translations = {
     exec_no_output: "Execution completed with no output.",
     custom_input: "Standard Input (stdin)",
     custom_output: "Standard Output (stdout)",
+    stdin_placeholder: "Type inputs for cin/scanf here...",
     
     // Errors
     error_load_exam: "Failed to load exam.",

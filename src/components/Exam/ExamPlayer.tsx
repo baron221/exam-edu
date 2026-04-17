@@ -74,7 +74,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
-  const runCode = async (code: string) => {
+  const runCode = async (code: string, input: string = '') => {
     if (!code.trim()) return;
     setJudging(true);
     setJudgeResult(null);
@@ -82,7 +82,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
       const res = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source_code: code, stdin })
+        body: JSON.stringify({ source_code: code, stdin: input })
       });
       const data = await res.json();
       setJudgeResult(data);
@@ -268,7 +268,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                   <div className="flex items-center gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
                     <span className="text-xs">💻</span> {t('kernel_terminal')}
                   </div>
-                  <button className={styles.runBtn} onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '')} disabled={judging}>
+                  <button className={styles.runBtn} onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '', stdin)} disabled={judging}>
                     {judging ? t('compiling') : `▶ ${t('verify_solution')}`}
                   </button>
                 </div>
@@ -330,13 +330,14 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                       </div>
 
                       <div className={styles.inputArea}>
-                        <div className={styles.panelLabel}>{t('custom_input')}</div>
+                        <div className={styles.panelLabel}>{t('custom_input')} <span className="opacity-40 italic ml-2 lowercase">(Enter all inputs before run)</span></div>
                         <div className={styles.inputWrapper}>
                            <span className={styles.terminalPrompt}>$</span>
                            <textarea 
                              className={styles.terminalTextarea}
-                             placeholder="Type stdin for cin/scanf here..."
+                             placeholder={t('stdin_placeholder')}
                              value={stdin}
+                             rows={3}
                              onChange={(e) => setStdin(e.target.value)}
                            />
                         </div>
