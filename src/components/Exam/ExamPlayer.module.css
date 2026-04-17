@@ -232,17 +232,73 @@
 
 .judgeResult {
   flex: 1;
-  padding: 20px;
   border-radius: 18px;
-  font-family: var(--font-mono), monospace;
-  font-size: 0.8rem;
   background: #0f172a;
   border: 1px solid rgba(255,255,255,0.05);
-  color: #cbd5e1;
-  overflow-y: auto;
   box-shadow: inset 0 2px 20px rgba(0,0,0,0.4);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.consoleHeader {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+}
+
+.consoleSplit {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  divide-x: 1px solid rgba(255,255,255,0.05);
+}
+
+.inputPanel, .outputPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  min-width: 0;
+}
+
+.inputPanel {
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.panelLabel {
+  font-size: 8px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 12px;
+}
+
+.terminalTextarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+}
+
+.terminalOutput {
+  flex: 1;
+  margin: 0;
+  color: #10b981;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-y: auto;
 }
 
 .footer {

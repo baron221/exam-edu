@@ -23,6 +23,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
   const [judging, setJudging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [stdin, setStdin] = useState('');
   const [attempt, setAttempt] = useState<any>(null);
   const [error, setError] = useState('');
 
@@ -81,7 +82,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
       const res = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source_code: code })
+        body: JSON.stringify({ source_code: code, stdin })
       });
       const data = await res.json();
       setJudgeResult(data);
@@ -283,22 +284,39 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                   </div>
 
                   {(judgeResult || judging) && (
-                    <div className={styles.judgeResult}>
-                      <div className="flex justify-between items-center mb-4">
-                          <div className="font-bold uppercase tracking-[0.15em] text-[8px] text-white/20">{t('system_console')}</div>
-                          {judgeResult && (
-                            <div className={`text-[9px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                {judgeResult.status?.description || t('result')}
-                            </div>
-                          )}
+                  <div className={styles.judgeResult}>
+                    <div className={styles.consoleHeader}>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Exam Terminal v4.2</span>
                       </div>
-                      <pre className="whitespace-pre-wrap text-emerald-400/80 font-mono text-[12px] leading-relaxed flex-1 overflow-y-auto">
+                      {judgeResult && (
+                        <div className={`text-[9px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                            {judgeResult.status?.description || t('result')}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.consoleSplit}>
+                      <div className={styles.inputPanel}>
+                        <div className={styles.panelLabel}>{t('custom_input')}</div>
+                        <textarea 
+                          className={styles.terminalTextarea}
+                          placeholder="Type stdin here..."
+                          value={stdin}
+                          onChange={(e) => setStdin(e.target.value)}
+                        />
+                      </div>
+
+                      <div className={styles.outputPanel}>
+                        <div className={styles.panelLabel}>{t('custom_output')}</div>
+                        <div className={styles.terminalOutput}>
                           {judging ? (
-                            <div className="flex flex-col gap-2 h-full justify-center items-center opacity-40">
-                              <div className="w-4 h-4 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                            <div className="flex flex-col gap-3 h-full justify-center items-center opacity-40">
+                              <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                               <div className="text-[10px] uppercase tracking-widest">{t('compiling')}</div>
                             </div>
-                          ) : (
+                          ) : judgeResult ? (
                             <>
                               {(() => {
                                   const safeAtob = (str: string) => {
@@ -315,9 +333,15 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                               {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
                               {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
                             </>
+                          ) : (
+                            <div className="flex items-center justify-center h-full opacity-20 italic text-[10px]">
+                              Waiting for execution...
+                            </div>
                           )}
-                      </pre>
+                        </div>
+                      </div>
                     </div>
+                  </div>
                   )}
                 </div>
               </div>

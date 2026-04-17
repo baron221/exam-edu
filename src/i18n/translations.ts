@@ -203,6 +203,8 @@ export const translations = {
     no_data: "No Data Available",
     result: "Result",
     exec_no_output: "Execution completed with no output.",
+    custom_input: "Custom Input (stdin)",
+    custom_output: "System Output (stdout)",
     
     // Errors
     error_load_exam: "Failed to load exam.",
