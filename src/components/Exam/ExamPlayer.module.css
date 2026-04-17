@@ -239,33 +239,80 @@
 
 .footer {
   padding: 24px 60px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(24px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
   border-top: 1px solid rgba(99, 102, 241, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 -4px 20px rgba(99,102,241,0.04);
+  box-shadow: 0 -8px 30px rgba(99, 102, 241, 0.04);
 }
 
-.submitBtn {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  color: #fff;
-  border: none;
-  padding: 14px 40px;
-  border-radius: 16px;
+.footerBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
-.submitBtn:hover {
+.footerBtn:hover:not(:disabled) {
+  border-color: #6366f1;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.03);
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.35);
-  filter: brightness(1.05);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+}
+
+.footerBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.sequenceContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sequenceLabel {
+  font-size: 9px;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+}
+
+.sequenceValue {
+  background: rgba(99, 102, 241, 0.06);
+  color: #4f46e5;
+  padding: 8px 20px;
+  border-radius: 99px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sequenceDivider {
+  color: rgba(99, 102, 241, 0.25);
+  font-weight: 300;
 }
 
 .loadingOverlay {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Timer from './Timer';
 import MonacoEditor from '../MonacoEditor';
 import styles from './ExamPlayer.module.css';
@@ -314,24 +315,28 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
 
       <footer className={styles.footer}>
         <button 
-          className="px-8 py-3 rounded-2xl border border-white/5 text-xs font-black text-white/30 hover:bg-white/5 hover:text-white/60 transition-all disabled:opacity-30 uppercase tracking-[0.1em]"
+          className={styles.footerBtn}
           disabled={currentIndex === 0}
           onClick={() => { setCurrentIndex(i => i - 1); setJudgeResult(null); }}
         >
-          ← Prev Portal
+          <ChevronLeft size={18} strokeWidth={3} />
+          {t('prevPortal')}
         </button>
-        <div className="flex flex-col items-center">
-            <div className="text-[9px] font-black text-white/10 uppercase tracking-[0.3em] mb-2">Sequence</div>
-            <div className="text-sm font-black text-white px-4 py-1.5 bg-white/5 rounded-full border border-white/5">
-                {currentIndex + 1} <span className="text-white/20 mx-1">/</span> {totalQuestions}
+
+        <div className={styles.sequenceContainer}>
+            <div className={styles.sequenceLabel}>{t('sequence')}</div>
+            <div className={styles.sequenceValue}>
+                {currentIndex + 1} <span className={styles.sequenceDivider}>/</span> {totalQuestions}
             </div>
         </div>
+
         <button 
-          className="px-8 py-3 rounded-2xl bg-white/5 text-xs font-black text-white/60 hover:bg-indigo-600 hover:text-white transition-all disabled:opacity-30 border border-white/5 uppercase tracking-[0.1em]"
+          className={styles.footerBtn}
           disabled={currentIndex === totalQuestions - 1}
           onClick={() => { setCurrentIndex(i => i + 1); setJudgeResult(null); }}
         >
-          Next Portal →
+          {t('nextPortal')}
+          <ChevronRight size={18} strokeWidth={3} />
         </button>
       </footer>
     </div>
