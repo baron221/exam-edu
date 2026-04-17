@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const fullPrompt = `${SYSTEM_PROMPT}\n\nUser Request: Generate ${count} questions about: ${prompt}\n\nJSON Response:`;
 
