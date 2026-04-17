@@ -56,16 +56,19 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [examRes, attemptRes] = await Promise.all([
-          fetch(`/api/exams/${examId}`),
-          fetch(`/api/exams/${examId}/attempts/current`)
-        ]);
+        const res = await fetch(`/api/exams/${examId}`);
+        const examData = await res.json();
         
-        const examData = await examRes.json();
-        const attemptData = await attemptRes.json();
-        
+        if (examData.error) {
+           console.error("API error:", examData.error);
+           return;
+        }
+
         setExam(examData);
-        setAttempt(attemptData);
+        // The attempt data is bundled inside the exam response in this project's architecture
+        if (examData.attempts && examData.attempts.length > 0) {
+          setAttempt(examData.attempts[0]);
+        }
         
         // Load saved answers
         const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
@@ -111,16 +114,20 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     
     setSubmitting(true);
     try {
-      await fetch(`/api/exams/attempts/${attempt.id}/finalize`, {
+      const response = await fetch(`/api/exams/${examId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
       });
+      
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
       localStorage.removeItem(`exam_answers_${examId}`);
       router.push('/dashboard');
     } catch (error) {
       console.error('Submit error:', error);
-      alert('Error submitting exam');
+      alert('Error submitting exam: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
