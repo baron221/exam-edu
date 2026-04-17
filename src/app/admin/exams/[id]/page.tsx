@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Sparkles, FileStack, X, Trash2, CheckCircle2, AlertCircle, Plus, Send, RefreshCw, ChevronLeft } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import styles from './ExamDetail.module.css';
 import { useTranslation } from '@/context/LanguageContext';
 
 export default function ExamDetailPage() {
