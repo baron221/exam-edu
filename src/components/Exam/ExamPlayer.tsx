@@ -27,6 +27,15 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
   const [attempt, setAttempt] = useState<any>(null);
   const [error, setError] = useState('');
 
+  const LANGUAGE_MAP: Record<string, number> = {
+    'cpp': 54,
+    'python': 71,
+    'javascript': 63,
+    'java': 62,
+    'c': 48,
+    'go': 60
+  };
+
   useEffect(() => {
     const loadExam = async () => {
       try {
@@ -74,15 +83,18 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
-  const runCode = async (code: string, input: string = '') => {
+  const runCode = async (code: string, input: string = '', lang: string = 'cpp') => {
     if (!code.trim()) return;
     setJudging(true);
     setJudgeResult(null);
+
+    const language_id = LANGUAGE_MAP[lang.toLowerCase()] || 54;
+
     try {
       const res = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source_code: code, stdin: input })
+        body: JSON.stringify({ source_code: code, stdin: input, language_id })
       });
       const data = await res.json();
       setJudgeResult(data);
@@ -268,7 +280,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                   <div className="flex items-center gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
                     <span className="text-xs">💻</span> {t('kernel_terminal')}
                   </div>
-                  <button className={styles.runBtn} onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '', stdin)} disabled={judging}>
+                  <button className={styles.runBtn} onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '', stdin, currentQ.language || 'cpp')} disabled={judging}>
                     {judging ? t('compiling') : `▶ ${t('verify_solution')}`}
                   </button>
                 </div>

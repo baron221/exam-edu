@@ -18,8 +18,11 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    const b64_source = Buffer.from(source_code).toString('base64');
-    const b64_stdin = Buffer.from(stdin).toString('base64');
+    // Sanitize stdin: Remove carriage returns and ensure clean UTF-8
+    const cleanStdin = stdin.replace(/\r/g, '').trim();
+
+    const b64_source = Buffer.from(source_code, 'utf8').toString('base64');
+    const b64_stdin = Buffer.from(cleanStdin, 'utf8').toString('base64');
 
     const response = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=true", {
       method: "POST",
