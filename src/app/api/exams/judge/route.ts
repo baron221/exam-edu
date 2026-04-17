@@ -18,20 +18,46 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    const response = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true", {
+    const b64_source = Buffer.from(source_code).toString('base64');
+    const b64_stdin = Buffer.from(stdin).toString('base64');
+
+    const response = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=true", {
       method: "POST",
       headers: {
         "x-rapidapi-key": process.env.JUDGE0_API_KEY,
         "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ source_code, language_id, stdin }),
+      body: JSON.stringify({ 
+        source_code: b64_source, 
+        language_id, 
+        stdin: b64_stdin 
+      }),
     });
 
     const result = await response.json();
+    
+    // Detailed logging for development
+    console.log('JUDGE0_RESPONSE:', {
+        status: result.status?.description,
+        time: result.time,
+        memory: result.memory
+    });
+
+    if (!response.ok) {
+        return NextResponse.json({ 
+            error: "Execution environment reached a critical error.",
+            details: result.message || "Unknown API error"
+        }, { status: response.status });
+    }
+
     return NextResponse.json(result);
-  } catch (error) {
-    console.error("[JUDGE0_ERROR]", error);
-    return NextResponse.json({ error: "Code execution failed" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[JUDGE0_CRITICAL_FAIL]", error);
+    return NextResponse.json({ 
+        error: "Kernel execution failed.",
+        message: error.message || "Network disruption occurred."
+    }, { status: 500 });
   }
 }
+

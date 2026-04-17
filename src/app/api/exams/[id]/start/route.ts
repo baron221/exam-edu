@@ -30,7 +30,17 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(attempt);
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      include: {
+        questions: {
+          orderBy: { order: "asc" },
+          include: { options: true },
+        },
+      },
+    });
+
+    return NextResponse.json({ ...exam, attempts: [attempt] });
   } catch (error) {
     console.error("[EXAM_START]", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });

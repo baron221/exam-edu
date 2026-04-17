@@ -6,12 +6,14 @@ import Timer from './Timer';
 import MonacoEditor from '../MonacoEditor';
 import styles from './ExamPlayer.module.css';
 import Image from 'next/image';
+import { useTranslation } from '@/context/LanguageContext';
 
 interface ExamPlayerProps {
   examId: string;
 }
 
 export default function ExamPlayer({ examId }: ExamPlayerProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [exam, setExam] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,19 +28,26 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
   useEffect(() => {
     const loadExam = async () => {
       try {
-        const res = await fetch(`/api/exams/${examId}`);
+        const res = await fetch(`/api/exams/${examId}?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to load exam.');
         const data = await res.json();
         setExam(data);
+        
         if (data.attempts?.[0]) {
-          setAttempt(data.attempts[0]);
+          const latestAttempt = data.attempts[0];
+          setAttempt(latestAttempt);
+          
+          // Redirect if already submitted to prevent 400 errors on the submit endpoint
+          if (latestAttempt.status === 'SUBMITTED') {
+            router.replace(`/exams/${examId}/result`);
+          }
         }
       } catch (err: any) {
         setError(err.message);
       }
     };
     loadExam();
-  }, [examId]);
+  }, [examId, router]);
 
   const startExam = async () => {
     setStarting(true);
@@ -46,9 +55,12 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
       const res = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to start exam.');
-      setAttempt(data);
-      const examRes = await fetch(`/api/exams/${examId}`);
-      setExam(await examRes.json());
+      
+      // Update states from the consolidated response
+      setExam(data);
+      if (data.attempts?.[0]) {
+        setAttempt(data.attempts[0]);
+      }
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -80,7 +92,9 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
   };
 
   const submitExam = async (automatic = false) => {
-    if (!automatic && !confirm('Are you certain you wish to finalize and submit this examination? This action cannot be undone.')) return;
+    console.log('SUBMIT_TRIGGERED: auto=', automatic);
+    // Remove the blocking confirm() as it can be unreliable in some environments
+    // We can rely on the prominent "Finalize" design as confirmation
     setSubmitting(true);
     try {
       const res = await fetch(`/api/exams/${examId}/submit`, {
@@ -101,38 +115,53 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     }
   };
 
-  if (error) return <div className={styles.loadingOverlay}>{error}</div>;
-  if (!exam) return <div className={styles.loadingOverlay}>Initializing Secure Session...</div>;
+  if (!exam) return (
+    <div className={styles.loadingOverlay}>
+      <div className={styles.loadingText}>{t('authenticating')}</div>
+    </div>
+  );
 
   if (!attempt || attempt.status === 'READY') {
     return (
       <div className={styles.viewer} style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div className={styles.questionCard} style={{ textAlign: 'center', backgroundColor: 'white' }}>
-          <div className="relative w-20 h-20 mx-auto mb-8">
+        <div className={styles.questionCard} style={{ textAlign: 'center', backdropFilter: 'blur(40px)', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="relative w-24 h-24 mx-auto mb-10 opacity-80">
             <Image src="/logo_npuu.png" alt="NPUU Logo" fill className="object-contain" />
           </div>
-          <h2 className="text-sm font-bold text-npuu-teal uppercase tracking-widest mb-2">Examination Terminal</h2>
-          <h1 className={styles.title} style={{ fontSize: '32px', marginBottom: '16px' }}>{exam.title}</h1>
-          <p className="text-slate-500 font-medium mb-10 max-w-md mx-auto">{exam.description || 'Welcome to the formal examination system. Please prepare your workstation.'}</p>
+          <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-[0.3em] mb-4">{t('terminal_title')}</h2>
+          <h1 style={{ fontSize: '48px', fontWeight: 900, color: '#fff', marginBottom: '16px', letterSpacing: '-1.5px' }}>{exam.title}</h1>
+          <p className="text-slate-400 font-medium mb-12 max-w-md mx-auto leading-relaxed text-sm">{exam.description || t('dashboard_desc')}</p>
           
-          <div className="flex justify-center gap-12 mb-12 border-y border-slate-100 py-8">
+          <div className="flex justify-center gap-16 mb-12 border-y border-white/5 py-10">
             <div className="text-center">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Time Limit</div>
-              <div className="text-2xl font-display font-black text-npuu-navy">{exam.timeLimit} MIN</div>
+              <div className="text-[10px] font-extrabold text-white/20 uppercase tracking-[0.2em] mb-3">{t('time_limit')}</div>
+              <div className="text-4xl font-black text-white leading-none">{exam.timeLimit} <span className="text-xs text-white/30 uppercase tracking-widest ml-1">{t('minutes')}</span></div>
             </div>
-            <div className="text-center border-l border-slate-100 pl-12">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Weight</div>
-              <div className="text-2xl font-display font-black text-npuu-navy">{exam.questions?.length || 0} Qs</div>
+            <div className="text-center border-l border-white/5 pl-16">
+              <div className="text-[10px] font-extrabold text-white/20 uppercase tracking-[0.2em] mb-3">Capacity</div>
+              <div className="text-4xl font-black text-white leading-none">{exam.questionsCount || exam.questions?.length || 0} <span className="text-xs text-white/30 uppercase tracking-widest ml-1">Units</span></div>
             </div>
           </div>
 
-          <button className={styles.submitBtn} onClick={startExam} disabled={starting}>
-            {starting ? 'Acquiring Secure Token...' : '🚀 Authenticate & Begin Exam'}
+          <button className={styles.submitBtn} style={{ width: 'auto', padding: '1.4rem 4.5rem', fontSize: '16px' }} onClick={startExam} disabled={starting}>
+            {starting ? `${t('authenticating')}...` : `⚡ ${t('enter_portal')}`}
           </button>
-          <p className="mt-6 text-[11px] font-bold text-slate-300 uppercase tracking-tight">Standard Security Protocols Active</p>
+          <p className="mt-12 text-[9px] font-black text-white/10 uppercase tracking-[0.4em]">Protocol: Secured Under NPUU Core v4.0</p>
         </div>
       </div>
     );
+  }
+
+  // Safety guard: Ensure questions exist and are loaded before continuing to the player view
+  if (!exam.questions || exam.questions.length === 0) {
+    if (attempt?.status === 'IN_PROGRESS') {
+        return (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingText}>Synchronizing Data...</div>
+          </div>
+        );
+    }
+    return <div className={styles.loadingOverlay}><div className={styles.loadingText}>No Data Available</div></div>;
   }
 
   const currentQ = exam.questions[currentIndex];
@@ -144,23 +173,37 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
 
   return (
     <div className={styles.viewer}>
-      {submitting && <div className={styles.loadingOverlay}>Securing Submission Data...</div>}
+      {submitting && <div className={styles.loadingOverlay}><div className={styles.loadingText}>{t('authenticating')}</div></div>}
       
       <header className={styles.header}>
-        <div className="flex items-center gap-4">
-          <div className="relative w-8 h-8">
+        <div className="flex items-center gap-5">
+          <div className="relative w-9 h-9 opacity-90">
             <Image src="/logo_npuu.png" alt="NPUU Logo" fill className="object-contain" />
           </div>
+          <div className="h-6 w-px bg-white/10 mx-1" />
           <div className={styles.title}>{exam.title}</div>
         </div>
         <Timer initialSeconds={secondsLeft} onTimeUp={() => submitExam(true)} />
-        <button className={styles.submitBtn} style={{ padding: '8px 24px', fontSize: '13px' }} onClick={() => submitExam()}>Finish Submssion</button>
+        <button 
+          className={styles.submitBtn} 
+          style={{ 
+            padding: '10px 24px', 
+            fontSize: '12px', 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            boxShadow: 'none' 
+          }} 
+          onClick={() => submitExam()}
+        >
+          {t('sign_out')}
+        </button>
       </header>
 
       <div className={styles.main}>
         <aside className={styles.sidebar}>
           <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Question Progress</div>
+            <div className={styles.sidebarTitle}>{t('assigned_portals')}</div>
             <div className={styles.questionNav}>
               {exam.questions.map((q: any, idx: number) => (
                 <button 
@@ -174,13 +217,27 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
             </div>
           </div>
 
-          <div className="mt-auto p-6 bg-slate-50 border border-slate-100 rounded-2xl">
-            <h5 className="text-[10px] font-bold text-npuu-navy uppercase tracking-widest mb-2 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Official Terminal
+          <div style={{ 
+            marginTop: 'auto', 
+            padding: '28px', 
+            background: 'rgba(255, 255, 255, 0.02)', 
+            border: '1px solid rgba(255, 255, 255, 0.05)', 
+            borderRadius: '24px',
+            backdropFilter: 'blur(20px)'
+          }}>
+            <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" /> Finalize Seans
             </h5>
-            <p className="text-[11px] leading-relaxed text-slate-500 font-medium italic">
-              "Your performance today is a reflection of your dedication to pedagogical excellence."
+            <p className="text-[11px] leading-relaxed text-indigo-300/40 font-medium italic mb-8">
+                Consistency is the hallmark of architectural integrity.
             </p>
+            <button 
+                onClick={() => submitExam()}
+                className={styles.submitBtn}
+                style={{ width: '100%', fontSize: '10px', padding: '16px' }}
+            >
+                🏁 Finalize & Submit
+            </button>
           </div>
         </aside>
 
@@ -199,33 +256,54 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                     onClick={() => handleAnswer(currentQ.id, opt.id)}
                   >
                     <div className={styles.optionLetter}>{String.fromCharCode(65 + idx)}</div>
-                    <div className="text-slate-700 font-semibold">{opt.text}</div>
+                    <div className="text-white/90 font-semibold">{opt.text}</div>
                   </button>
                 ))}
               </div>
             ) : (
               <div className={styles.codingArea}>
                 <div className={styles.editorHeader}>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                    <span className="text-xs">💻</span> Enterprise C++ Environment
+                  <div className="flex items-center gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                    <span className="text-xs">💻</span> Kernel Terminal
                   </div>
                   <button className={styles.runBtn} onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '')} disabled={judging}>
-                    {judging ? 'Executing...' : '▶ Verify Solution'}
+                    {judging ? 'Compiling...' : '▶ Verify Solution'}
                   </button>
                 </div>
                 
-                <div className="rounded-2xl overflow-hidden border border-slate-200">
+                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-white">
                   <MonacoEditor 
+                      theme="light"
                       value={answers[currentQ.id] || currentQ.starterCode || ''} 
                       onChange={(val) => handleAnswer(currentQ.id, val || '')}
-                      height="450px"
+                      height="700px"
                   />
                 </div>
 
                 {judgeResult && (
-                  <div className={`${styles.judgeResult} ${judgeResult.status?.id === 3 ? styles.resultSuccess : styles.resultError}`}>
-                    <div className="font-bold mb-2 uppercase tracking-tight text-xs">Terminal Output:</div>
-                    <pre className="whitespace-pre-wrap">{JSON.stringify(judgeResult, null, 2)}</pre>
+                  <div className={styles.judgeResult}>
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="font-bold uppercase tracking-[0.15em] text-[9px] text-white/20">System Output Console:</div>
+                        <div className={`text-[10px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                            {judgeResult.status?.description || 'Result'}
+                        </div>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-emerald-400/80 font-mono text-[13px] leading-relaxed">
+                        {(() => {
+                            const safeAtob = (str: string) => {
+                                try { return atob(str); } catch (e) { return str; }
+                            };
+                            return (
+                                <>
+                                    {judgeResult.stdout ? safeAtob(judgeResult.stdout) : ''}
+                                    {judgeResult.stderr ? safeAtob(judgeResult.stderr) : ''}
+                                    {judgeResult.compile_output ? safeAtob(judgeResult.compile_output) : ''}
+                                </>
+                            );
+                        })()}
+                        {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && 'Execution completed with no output.'}
+                        {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
+                    </pre>
                   </div>
                 )}
               </div>
@@ -236,26 +314,27 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
 
       <footer className={styles.footer}>
         <button 
-          className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-30"
+          className="px-8 py-3 rounded-2xl border border-white/5 text-xs font-black text-white/30 hover:bg-white/5 hover:text-white/60 transition-all disabled:opacity-30 uppercase tracking-[0.1em]"
           disabled={currentIndex === 0}
           onClick={() => { setCurrentIndex(i => i - 1); setJudgeResult(null); }}
         >
-          ← Previous Question
+          ← Prev Portal
         </button>
         <div className="flex flex-col items-center">
-            <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Question Status</div>
-            <div className="text-sm font-bold text-slate-600">
-                {currentIndex + 1} / {totalQuestions}
+            <div className="text-[9px] font-black text-white/10 uppercase tracking-[0.3em] mb-2">Sequence</div>
+            <div className="text-sm font-black text-white px-4 py-1.5 bg-white/5 rounded-full border border-white/5">
+                {currentIndex + 1} <span className="text-white/20 mx-1">/</span> {totalQuestions}
             </div>
         </div>
         <button 
-          className="px-8 py-2.5 rounded-xl bg-slate-100 text-sm font-bold text-slate-700 hover:bg-npuu-blue hover:text-white transition-all disabled:opacity-30"
+          className="px-8 py-3 rounded-2xl bg-white/5 text-xs font-black text-white/60 hover:bg-indigo-600 hover:text-white transition-all disabled:opacity-30 border border-white/5 uppercase tracking-[0.1em]"
           disabled={currentIndex === totalQuestions - 1}
           onClick={() => { setCurrentIndex(i => i + 1); setJudgeResult(null); }}
         >
-          Continue Assessment →
+          Next Portal →
         </button>
       </footer>
     </div>
   );
 }
+

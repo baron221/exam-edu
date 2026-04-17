@@ -1,107 +1,135 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  /* Ultra-Premium NPUU Palette */
-  --npuu-primary: #1d518d;
-  --npuu-secondary: #007a8c;
-  --npuu-accent: #7c3aed;
-  --background: #ffffff;
+  /* Premium Light Theme */
+  --color-bg:        #f0f4ff;
+  --color-surface:   #ffffff;
+  --color-border:    #e2e8f0;
+  --color-primary:   #6366f1;
+  --color-primary-dark: #4f46e5;
+  --color-text-heading: #0f172a;
+  --color-text-body:    #334155;
+  --color-text-muted:   #64748b;
+  --color-text-faint:   #94a3b8;
+  --color-accent-green: #10b981;
+  --color-accent-blue:  #3b82f6;
+
+  /* Legacy aliases for ExamPlayer module */
+  --figma-bg-center: #6366f1;
+  --figma-bg-edge:   #f0f4ff;
+  --figma-card-bg:   rgba(255, 255, 255, 0.92);
+  --figma-navy:      #4f46e5;
+  --figma-primary:   #6366f1;
+  --background: #f0f4ff;
   --foreground: #0f172a;
-  
-  /* Glassmorphism & Elevation */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
 }
 
-@theme inline {
-  --color-npuu-primary: var(--npuu-primary);
-  --color-npuu-secondary: var(--npuu-secondary);
-  --color-npuu-accent: var(--npuu-accent);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
-  --font-display: var(--font-outfit), sans-serif;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-body {
-  background: #fcfcfd;
-  color: var(--foreground);
-  font-family: var(--font-inter);
-  -webkit-font-smoothing: antialiased;
+html, body {
+  margin: 0; padding: 0;
   min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f4f0ff 100%);
+  background-attachment: fixed;
+  color: var(--color-text-heading);
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Premium Utility Classes --- */
-
-.mesh-gradient {
-  background-color: #ffffff;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(29, 81, 141, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(0, 122, 140, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(124, 58, 237, 0.05) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(29, 81, 141, 0.05) 0px, transparent 50%);
+/* Inputs / Buttons reset */
+input, button, select, textarea {
+  margin: 0; padding: 0;
+  background: transparent;
+  font-family: inherit;
 }
 
-.premium-blur-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.02),
-    0 20px 25px -5px rgba(0, 0, 0, 0.03),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+/* ─── Global utility classes ─── */
+
+.page-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f4f0ff 100%);
+  background-attachment: fixed;
 }
 
-.premium-gradient-text {
-  background: linear-gradient(135deg, var(--npuu-primary), var(--npuu-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* kept for legacy use inside ExamPlayer CSS */
+.figma-bg {
+  background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f4f0ff 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh !important;
 }
 
-.premium-button {
-  background: linear-gradient(135deg, var(--npuu-primary) 0%, #2563eb 100%);
-  color: white;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.figma-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.03), 0 20px 50px rgba(99,102,241,0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  position: relative;
+  z-index: 10;
 }
 
-.premium-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.3);
-  filter: brightness(1.1);
+.figma-input {
+  background: #f8fafc !important;
+  border: 1.5px solid var(--color-border) !important;
+  border-radius: 12px !important;
+  padding: 13px 16px !important;
+  color: var(--color-text-heading) !important;
+  font-size: 15px !important;
+  width: 100% !important;
+  outline: none !important;
+  transition: border-color 0.2s !important;
+}
+.figma-input:focus {
+  border-color: var(--color-primary) !important;
 }
 
-.premium-input {
-  background: rgba(248, 250, 252, 0.8);
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: 0.875rem 1.25rem;
-  transition: all 0.2s;
-  font-size: 0.9375rem;
+.figma-btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 13px 24px !important;
+  transition: all 0.2s !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 6px 20px rgba(99,102,241,0.35) !important;
+  text-decoration: none !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+}
+.figma-btn-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(99,102,241,0.45) !important;
 }
 
-.premium-input:focus {
-  background: #ffffff;
-  border-color: var(--npuu-primary);
-  box-shadow: 0 0 0 4px rgba(29, 81, 141, 0.05);
-  outline: none;
+.figma-btn-social {
+  background: #ffffff !important;
+  color: var(--color-text-body) !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  padding: 12px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  border: 1.5px solid var(--color-border) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+.figma-text-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }

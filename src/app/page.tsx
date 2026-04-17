@@ -1,146 +1,160 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+'use client';
+
+import React from 'react';
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Image from "next/image";
+import { useTranslation } from '@/context/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useEffect, useState } from 'react';
 
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
+export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const { t } = useTranslation();
+  const [exams, setExams] = useState<any[]>([]);
+  const [loadingExams, setLoadingExams] = useState(true);
 
-  const exams = await prisma.exam.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { course: true }
-  });
+  useEffect(() => {
+    if (status === 'unauthenticated') redirect("/login");
+    if (status === 'authenticated') {
+      fetch('/api/exams').then(r => r.json()).then(d => { setExams(d); setLoadingExams(false); });
+    }
+  }, [status]);
+
+  if (status === 'loading' || loadingExams) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f4f0ff 100%)', color: '#6366f1', fontWeight: 900, fontSize: 20 }}>
+        {t('authenticating')}
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen mesh-gradient">
-      {/* Premium Multi-layer Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/60 backdrop-blur-3xl border-b border-slate-200/50">
-        <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-5 transition-transform hover:scale-105 duration-300">
-            <div className="relative w-11 h-11 drop-shadow-lg">
-              <Image src="/logo_npuu.png" alt="NPUU Logo" fill className="object-contain" />
-            </div>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f4f0ff 100%)', backgroundAttachment: 'fixed', fontFamily: 'var(--font-inter), Inter, system-ui, sans-serif' }}>
+
+      {/* ── NAV ── */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(99,102,241,0.12)',
+        boxShadow: '0 2px 20px rgba(99,102,241,0.08)',
+        padding: '14px 40px',
+      }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Brand */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <Image src="/logo_npuu.png" alt="NPUU" width={38} height={38} style={{ objectFit: 'contain' }} />
             <div>
-              <h1 className="text-2xl font-display font-black premium-gradient-text tracking-tighter leading-none">NPUU</h1>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-npuu-teal rounded-full animate-pulse" />
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Exam Terminal</span>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.3px', lineHeight: 1 }}>NPUU</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: 2 }}>
+                {t('terminal_title')}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-8">
-            <div className="hidden lg:flex flex-col items-end">
-              <span className="text-sm font-black text-slate-800">{session.user?.name}</span>
-              <span className="text-[10px] text-npuu-teal font-black uppercase tracking-tighter">Verified Official Session</span>
+          {/* Right side */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{session?.user?.name}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('verified_session')}</div>
             </div>
-            <Link 
-              href="/api/auth/signout" 
-              className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300 shadow-sm"
-            >
-              Sign Out
+            <LanguageSwitcher />
+            <Link href="/api/auth/signout" style={{
+              padding: '8px 18px', borderRadius: 10,
+              border: '1.5px solid #e2e8f0', background: '#fff',
+              fontSize: 13, fontWeight: 600, color: '#64748b',
+              textDecoration: 'none', whiteSpace: 'nowrap',
+            }}>
+              {t('sign_out')}
             </Link>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-8 py-16">
-        <header className="mb-20 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-100 rounded-full shadow-sm mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-npuu-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-npuu-primary"></span>
-            </span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Year 2024/2025</span>
+      {/* ── MAIN ── */}
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 40px', width: '100%', boxSizing: 'border-box' }}>
+
+        {/* Header */}
+        <header style={{ marginBottom: 48 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 999, marginBottom: 16 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#6366f1', display: 'inline-block' }} />
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.2em' }}>NPUU Digital Registry</span>
           </div>
-          <h2 className="text-6xl font-display font-black text-slate-900 tracking-tighter mb-6 leading-[0.9]">
-            Digital <span className="premium-gradient-text">Assessments</span>
-          </h2>
-          <p className="text-lg text-slate-500 font-medium max-w-2xl leading-relaxed">
-            Welcome to the National Pedagogical University of Uzbekistan's advanced examination platform. Please select your assigned assessment below to begin.
+          <h1 style={{ fontSize: 'clamp(32px, 4vw, 56px)', fontWeight: 900, color: '#0f172a', margin: '0 0 12px 0', letterSpacing: '-1px', lineHeight: 1.05 }}>
+            <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              {t('scheduled_exams')}
+            </span>
+          </h1>
+          <p style={{ fontSize: 16, color: '#64748b', fontWeight: 500, maxWidth: 560, lineHeight: 1.6, margin: 0 }}>
+            {t('dashboard_desc')}
           </p>
         </header>
 
-        <section>
-          <div className="flex items-center gap-4 mb-10">
-             <div className="h-px flex-1 bg-slate-200" />
-             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Currently Scheduled</h3>
-             <div className="h-px flex-1 bg-slate-200" />
-          </div>
+        {/* Section label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+          <div style={{ height: 1, width: 32, background: '#e2e8f0' }} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.3em', whiteSpace: 'nowrap' }}>{t('assigned_portals')}</span>
+          <div style={{ height: 1, flex: 1, background: '#e2e8f0' }} />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {exams.length === 0 ? (
-              <div className="col-span-full py-32 premium-blur-card rounded-[3rem] border-2 border-dashed border-slate-200 flex flex-col items-center text-center">
-                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8 text-4xl shadow-inner">📄</div>
-                <h4 className="text-2xl font-display font-black text-slate-800">Queue is Empty</h4>
-                <p className="text-slate-500 mt-4 max-w-xs font-medium">There are no examinations currently assigned to your profile by the registrar.</p>
+        {/* Exam Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
+          {exams.length === 0 ? (
+            <div style={{ gridColumn: '1/-1', padding: '80px 40px', background: '#fff', borderRadius: 24, border: '1.5px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 20px rgba(99,102,241,0.06)' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0' }}>{t('no_exams_title')}</h3>
+              <p style={{ fontSize: 14, color: '#94a3b8', fontWeight: 500, margin: 0 }}>{t('no_exams_desc')}</p>
+            </div>
+          ) : exams.map(exam => (
+            <div key={exam.id} style={{
+              background: '#fff', borderRadius: 20,
+              border: '1.5px solid #e2e8f0',
+              boxShadow: '0 2px 12px rgba(99,102,241,0.07)',
+              padding: '28px 28px 24px',
+              display: 'flex', flexDirection: 'column',
+              transition: 'all 0.25s',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 32px rgba(99,102,241,0.16)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(99,102,241,0.3)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(99,102,241,0.07)'; (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0'; }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <span style={{ padding: '4px 12px', background: 'rgba(99,102,241,0.08)', color: '#6366f1', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', borderRadius: 8, border: '1px solid rgba(99,102,241,0.2)' }}>
+                  {exam.type}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>⏱ {exam.timeLimit} {t('minutes')}</span>
               </div>
-            ) : (
-              exams.map(exam => (
-                <div key={exam.id} className="premium-blur-card rounded-[2.5rem] overflow-hidden group hover:ring-2 ring-npuu-primary/20 transition-all duration-500">
-                  <div className="p-10">
-                    <div className="flex justify-between items-start mb-10">
-                      <div className="px-4 py-1.5 bg-npuu-primary/5 text-npuu-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-npuu-primary/10">
-                        {exam.type}
-                      </div>
-                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                        <span className="text-xs">⏱️</span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{exam.timeLimit}m</span>
-                      </div>
-                    </div>
-                    
-                    <h4 className="text-2xl font-display font-black text-slate-900 mb-4 group-hover:text-npuu-primary transition-colors duration-300">
-                      {exam.title}
-                    </h4>
-                    <p className="text-sm text-slate-400 font-bold uppercase tracking-tight mb-10 line-clamp-2">
-                       {exam.course.title}
-                    </p>
-
-                    <div className="pt-8 border-t border-slate-100 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Status</span>
-                        <span className="text-[11px] font-black text-emerald-500 uppercase">Live Access</span>
-                      </div>
-                      <Link 
-                        href={`/exams/${exam.id}`} 
-                        className="premium-button px-8 py-3 rounded-2xl text-xs"
-                      >
-                        Enter Room
-                      </Link>
-                    </div>
-                  </div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0', lineHeight: 1.2 }}>{exam.title}</h3>
+              <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, margin: '0 0 auto 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{exam.course?.title}</p>
+              <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 20, paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 3 }}>Status</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase' }}>{t('status_ready')}</div>
                 </div>
-              ))
-            )}
-          </div>
-        </section>
+                <Link href={`/exams/${exam.id}`} style={{
+                  padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                  color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                  boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
+                }}>
+                  {t('enter_portal')}
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </main>
 
-      <footer className="max-w-7xl mx-auto px-8 py-20 mt-20 border-t border-slate-200/40">
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-12">
-          <div className="flex items-center gap-5 opacity-40 hover:opacity-100 transition-opacity duration-500 group">
-            <div className="relative w-10 h-10 grayscale group-hover:grayscale-0 transition-all">
-              <Image src="/logo_npuu.png" alt="NPUU Logo" fill className="object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-black text-slate-900 tracking-tighter">NPUU Digital</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Institutional Systems</span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex gap-10 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-              <Link href="#" className="hover:text-npuu-primary transition-colors">Digital Ethics</Link>
-              <Link href="#" className="hover:text-npuu-primary transition-colors">Data Privacy</Link>
-              <Link href="#" className="hover:text-npuu-primary transition-colors">Help Terminal</Link>
-            </div>
-            <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">
-              Encryption standard: AES-256-GCM — Verified Connection
-            </p>
-          </div>
+      {/* ── FOOTER ── */}
+      <footer style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Image src="/logo_npuu.png" alt="NPUU" width={28} height={28} style={{ objectFit: 'contain', opacity: 0.5 }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>NPUU Examination System</span>
+        </div>
+        <div style={{ display: 'flex', gap: 24 }}>
+          {['Digital Code', 'Privacy', 'Support'].map(l => (
+            <Link key={l} href="#" style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textDecoration: 'none' }}>{l}</Link>
+          ))}
         </div>
       </footer>
     </div>
