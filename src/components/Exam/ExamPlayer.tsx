@@ -281,10 +281,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                         onChange={(val) => handleAnswer(currentQ.id, val || '')}
                         height="460px"
                     />
-                  </div>
-
-                  {(judgeResult || judging) && (
-                  <div className={styles.judgeResult}>
+                                  <div className={styles.judgeResult}>
                     <div className={styles.consoleHeader}>
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
@@ -302,7 +299,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                         <div className={styles.panelLabel}>{t('custom_input')}</div>
                         <textarea 
                           className={styles.terminalTextarea}
-                          placeholder="Type stdin here..."
+                          placeholder="Type input for cin/scanf here..."
                           value={stdin}
                           onChange={(e) => setStdin(e.target.value)}
                         />
@@ -342,7 +339,6 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                       </div>
                     </div>
                   </div>
-                  )}
                 </div>
               </div>
             )}

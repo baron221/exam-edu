@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { evaluateCode } from "@/lib/judge";
 
 export async function POST(
   request: NextRequest,
@@ -41,12 +42,29 @@ export async function POST(
       const userAnswer = answers[q.id];
       let isCorrect = false;
       let pointsEarned = 0;
+      let feedback = "";
 
       if (q.type === "MCQ") {
         const correctOpt = q.options.find(o => o.isCorrect);
         if (correctOpt && userAnswer === correctOpt.id) {
           isCorrect = true;
           pointsEarned = q.points;
+        }
+      } else if (q.type === "CODING") {
+        const testCases = q.testCases as any[];
+        if (testCases && testCases.length > 0) {
+          try {
+            const evalResult = await evaluateCode(String(userAnswer || ""), testCases);
+            pointsEarned = (evalResult.score / evalResult.total) * q.points;
+            isCorrect = evalResult.passed;
+            feedback = `Passed ${evalResult.score}/${evalResult.total} test cases.`;
+          } catch (err: any) {
+            console.error(`[EVAL_FAIL] Q:${q.id}`, err);
+            feedback = "Evaluation engine error.";
+          }
+        } else {
+          // No test cases defined, default to 0 or manual review needed
+          feedback = "No test cases defined for this unit.";
         }
       }
 
@@ -56,7 +74,8 @@ export async function POST(
         questionId: q.id,
         answer: String(userAnswer || ""),
         isCorrect,
-        pointsEarned
+        pointsEarned,
+        feedback
       });
     }
 

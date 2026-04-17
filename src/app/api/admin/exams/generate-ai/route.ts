@@ -10,7 +10,12 @@ Your task is to generate exam questions in a strict JSON format based on the use
 Rules:
 1. Generate MCQ (Multiple Choice) or CODING questions.
 2. For MCQ: Provide exactly 4 options. Specify which one is correct.
-3. For CODING: Provide a clear problem statement, a language (usually 'cpp'), and starter code.
+3. For CODING (CRITICAL): 
+   - Provide a clear problem statement in "text".
+   - Set "language" (default 'cpp').
+   - Provide "starterCode" which MUST be a boilerplate skeleton ONLY (e.g. #include, main function and maybe variable declarations).
+   - DO NOT EVER include the logic, algorithm, or solution in "starterCode".
+   - Generate exactly 3 "testCases". Each test case must have an "input" (string) and "expected_output" (string).
 4. Language support: You can generate questions in English, Russian, or Uzbek if requested.
 5. Return ONLY a JSON object with this structure:
 {
@@ -31,7 +36,11 @@ Rules:
       "type": "CODING",
       "points": 5,
       "language": "cpp",
-      "starterCode": "int main() { ... }"
+      "starterCode": "#include <iostream>\nusing namespace std;\n\nint main() {\n  // Your code here\n  return 0;\n}",
+      "testCases": [
+        { "input": "input1", "expected_output": "output1" },
+        { "input": "input2", "expected_output": "output2" }
+      ]
     }
   ]
 }

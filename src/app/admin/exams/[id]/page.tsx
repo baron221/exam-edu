@@ -430,12 +430,43 @@ export default function ExamDetailPage() {
                                         )}
 
                                         {pq.type === 'CODING' && (
-                                          <textarea 
-                                            className={styles.stageOptionInput} 
-                                            style={{ fontFamily: 'monospace', color: '#10b981', background: '#1e293b', width: '100%', height: 80, marginTop: 8 }}
-                                            value={pq.starterCode}
-                                            onChange={e => updatePendingQuestion(qIdx, { starterCode: e.target.value })}
-                                          />
+                                          <>
+                                            <textarea 
+                                              className={styles.stageOptionInput} 
+                                              style={{ fontFamily: 'monospace', color: '#10b981', background: '#1e293b', width: '100%', height: 80, marginTop: 8 }}
+                                              value={pq.starterCode}
+                                              onChange={e => updatePendingQuestion(qIdx, { starterCode: e.target.value })}
+                                            />
+                                            <div style={{ marginTop: 12 }}>
+                                              <span style={{ fontSize: 9, fontWeight: 950, color: '#6366f1', textTransform: 'uppercase' }}>Test Cases</span>
+                                              {pq.testCases?.map((tc: any, tcIdx: number) => (
+                                                <div key={tcIdx} style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                                                  <input 
+                                                    placeholder="Input"
+                                                    className={styles.stageOptionInput}
+                                                    style={{ fontSize: 10, flex: 1 }}
+                                                    value={tc.input}
+                                                    onChange={e => {
+                                                      const newTC = [...pq.testCases];
+                                                      newTC[tcIdx].input = e.target.value;
+                                                      updatePendingQuestion(qIdx, { testCases: newTC });
+                                                    }}
+                                                  />
+                                                  <input 
+                                                    placeholder="Output"
+                                                    className={styles.stageOptionInput}
+                                                    style={{ fontSize: 10, flex: 1 }}
+                                                    value={tc.expected_output}
+                                                    onChange={e => {
+                                                      const newTC = [...pq.testCases];
+                                                      newTC[tcIdx].expected_output = e.target.value;
+                                                      updatePendingQuestion(qIdx, { testCases: newTC });
+                                                    }}
+                                                  />
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </>
                                         )}
                                     </div>
                                 ))}
