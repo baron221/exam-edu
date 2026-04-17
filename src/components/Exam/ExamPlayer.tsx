@@ -105,6 +105,11 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     }
   };
 
+  const clearTerminal = () => {
+    setJudgeResult(null);
+    setStdin('');
+  };
+
   const submitExam = async (automatic = false) => {
     console.log('SUBMIT_TRIGGERED: auto=', automatic);
     // Remove the blocking confirm() as it can be unreliable in some environments
@@ -298,13 +303,18 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                     <div className={styles.consoleHeader}>
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Exam Terminal v4.2</span>
+                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Exam Terminal v4.5</span>
                       </div>
-                      {judgeResult && (
-                        <div className={`text-[9px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                            {judgeResult.status?.description || t('result')}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <button className={styles.clearBtn} onClick={clearTerminal}>
+                            {t('clear')}
+                        </button>
+                        {judgeResult && (
+                          <div className={`text-[9px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                              {judgeResult.status?.description || t('result')}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className={styles.terminalBody}>

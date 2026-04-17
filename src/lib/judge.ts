@@ -24,7 +24,7 @@ export interface EvaluationResult {
 export async function evaluateCode(
   source_code: string,
   testCases: TestCase[],
-  language_id: number = 54
+  language_id: number = 105
 ): Promise<EvaluationResult> {
   const apiKey = process.env.JUDGE0_API_KEY;
   if (!apiKey) {

@@ -255,20 +255,21 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  background: #020617; /* Even darker for true terminal feel */
 }
 
 .outputArea {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 16px 20px;
   min-height: 0;
-  border-bottom: 2px solid rgba(255,255,255,0.03);
 }
 
 .inputArea {
-  padding: 16px;
-  background: rgba(0,0,0,0.15);
+  padding: 12px 20px;
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid rgba(255,255,255,0.03);
 }
 
 .inputWrapper {
@@ -282,8 +283,27 @@
   font-family: var(--font-mono), monospace;
   font-weight: 900;
   font-size: 14px;
-  margin-top: -2px;
-  opacity: 0.6;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+.clearBtn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearBtn:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
 }
 
 .panelLabel {

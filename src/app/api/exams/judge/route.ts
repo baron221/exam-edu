@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { source_code, language_id = 54, stdin = "" } = await request.json();
+    const { source_code, language_id = 105, stdin = "" } = await request.json();
 
     if (!process.env.JUDGE0_API_KEY) {
       return NextResponse.json({ 
@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Sanitize stdin: Remove carriage returns and ensure clean UTF-8
-    const cleanStdin = stdin.replace(/\r/g, '').trim();
+    // Sanitize stdin: Remove carriage returns and enforce strict Unix newlines
+    const cleanStdin = stdin.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
     const b64_source = Buffer.from(source_code, 'utf8').toString('base64');
     const b64_stdin = Buffer.from(cleanStdin, 'utf8').toString('base64');
