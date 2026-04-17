@@ -296,7 +296,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                         theme="vs-dark"
                         value={answers[currentQ.id] || currentQ.starterCode || ''} 
                         onChange={(val) => handleAnswer(currentQ.id, val || '')}
-                        height="460px"
+                        height="100%"
                     />
                   </div>
                   <div className={styles.judgeResult}>
