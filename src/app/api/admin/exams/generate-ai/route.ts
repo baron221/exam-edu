@@ -59,13 +59,28 @@ export async function POST(req: NextRequest) {
     const response = await result.response;
     const text = response.text();
     
-    // Clean up potential markdown formatting from AI
-    const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    const data = JSON.parse(jsonStr);
+    console.log("[AI_RAW_RESPONSE]", text);
 
-    return NextResponse.json(data);
+    // Robust JSON extraction: Find the first { and last }
+    const startIdx = text.indexOf('{');
+    const endIdx = text.lastIndexOf('}');
+    
+    if (startIdx === -1 || endIdx === -1) {
+      console.error("[AI_PARSE_ERROR] No JSON block found in response");
+      return NextResponse.json({ error: "AI returned invalid format. Please try again." }, { status: 500 });
+    }
+
+    const jsonStr = text.substring(startIdx, endIdx + 1);
+    
+    try {
+      const data = JSON.parse(jsonStr);
+      return NextResponse.json(data);
+    } catch (parseErr: any) {
+      console.error("[AI_JSON_PARSE_FAILED]", parseErr.message, "Raw JSON candidate:", jsonStr);
+      return NextResponse.json({ error: "Failed to parse AI response. The engine may be busy.", details: parseErr.message }, { status: 500 });
+    }
   } catch (error: any) {
     console.error("[AI_GEN_ERROR]", error);
-    return NextResponse.json({ error: "Failed to generate questions.", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Critical AI Engine Failure", details: error.message }, { status: 500 });
   }
 }
