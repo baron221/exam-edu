@@ -219,7 +219,6 @@
 
 .workspace {
   display: flex;
-  flex-direction: column;
   gap: 16px;
   align-items: stretch;
   flex: 1;
@@ -227,20 +226,19 @@
 }
 
 .editorContainer {
-  height: 400px;
-  min-height: 300px;
+  flex: 1.6;
+  min-width: 0;
 }
 
 .judgeResult {
   flex: 1;
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(15,17,26,0.5);
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(15,17,26,0.3);
   backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 300px;
 }
 
 .consoleHeader {
@@ -257,21 +255,20 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  background: #020617; /* Even darker for true terminal feel */
 }
 
 .outputArea {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px 20px;
+  padding: 16px;
   min-height: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .inputArea {
-  padding: 12px 20px;
-  background: rgba(255,255,255,0.02);
-  border-top: 1px solid rgba(255,255,255,0.03);
+  padding: 16px;
+  background: rgba(0,0,0,0.1);
 }
 
 .inputWrapper {
@@ -285,8 +282,8 @@
   font-family: var(--font-mono), monospace;
   font-weight: 900;
   font-size: 14px;
-  margin-top: 2px;
-  opacity: 0.8;
+  margin-top: -2px;
+  opacity: 0.6;
 }
 
 .clearBtn {
@@ -314,7 +311,7 @@
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .terminalTextarea {
@@ -332,21 +329,12 @@
 .terminalOutput {
   flex: 1;
   margin: 0;
-  overflow-y: auto;
-  padding-bottom: 20px;
-}
-
-.outputContent {
   color: #10b981;
   font-family: var(--font-mono), monospace;
   font-size: 0.75rem;
   line-height: 1.5;
   white-space: pre-wrap;
-  margin-bottom: 12px;
-}
-
-.mergedInputArea {
-  margin-top: 4px;
+  overflow-y: auto;
 }
 
 .footer {
