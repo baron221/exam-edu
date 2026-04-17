@@ -281,7 +281,8 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                         onChange={(val) => handleAnswer(currentQ.id, val || '')}
                         height="460px"
                     />
-                                  <div className={styles.judgeResult}>
+                  </div>
+                  <div className={styles.judgeResult}>
                     <div className={styles.consoleHeader}>
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
