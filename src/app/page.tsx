@@ -61,6 +61,19 @@ export default function DashboardPage() {
               <div style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('verified_session')}</div>
             </div>
             <LanguageSwitcher />
+            
+            {(session?.user as any)?.role === 'teacher' && (
+              <Link href="/admin/exams" style={{
+                padding: '9px 18px', borderRadius: 10,
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                fontSize: 13, fontWeight: 700, color: '#fff',
+                textDecoration: 'none', whiteSpace: 'nowrap',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)',
+              }}>
+                {t('admin_dashboard')}
+              </Link>
+            )}
+
             <Link href="/api/auth/signout" style={{
               padding: '8px 18px', borderRadius: 10,
               border: '1.5px solid #e2e8f0', background: '#fff',

@@ -34,6 +34,7 @@ export const translations = {
     status_ready: "Kirishga tayyor",
     enter_portal: "Portalga kirish",
     verified_session: "Tasdiqlangan seans",
+    admin_dashboard: "Admin paneli",
     sign_out: "Chiqish",
     
     // Exam Player
@@ -108,6 +109,7 @@ export const translations = {
     status_ready: "Готов к входу",
     enter_portal: "Войти в портал",
     verified_session: "Подтвержденная сессия",
+    admin_dashboard: "Панель управления",
     sign_out: "Выйти",
     
     // Exam Player
@@ -182,6 +184,7 @@ export const translations = {
     status_ready: "Ready",
     enter_portal: "Enter Portal",
     verified_session: "Verified Session",
+    admin_dashboard: "Admin Dashboard",
     sign_out: "Sign Out",
     
     // Exam Player
