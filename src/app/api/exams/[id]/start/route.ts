@@ -16,11 +16,17 @@ export async function POST(
     const { id: examId } = await params;
     const userId = (session.user as any).id;
 
+    // Check for existing attempt and responses
+    const existingAttempt = await prisma.examAttempt.findUnique({
+      where: { userId_examId: { userId, examId } },
+      include: { responses: true }
+    });
+
     const attempt = await prisma.examAttempt.upsert({
       where: { userId_examId: { userId, examId } },
       update: {
         status: "IN_PROGRESS",
-        startTime: new Date(),
+        startTime: existingAttempt?.status === "IN_PROGRESS" ? existingAttempt.startTime : new Date(),
       },
       create: {
         userId,
@@ -34,13 +40,53 @@ export async function POST(
       where: { id: examId },
       include: {
         questions: {
-          orderBy: { order: "asc" },
           include: { options: true },
         },
       },
     });
 
-    return NextResponse.json({ ...exam, attempts: [attempt] });
+    if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+
+    let selectedQuestions = exam.questions;
+
+    // Only randomize if this is a fresh start (no responses yet)
+    if (existingAttempt?.responses.length === 0 || !existingAttempt) {
+      if (exam.shuffleQuestions) {
+        // Fisher-Yates Shuffle
+        for (let i = selectedQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [selectedQuestions[i], selectedQuestions[j]] = [selectedQuestions[j], selectedQuestions[i]];
+        }
+      }
+
+      if (exam.questionLimit && exam.questionLimit > 0) {
+        selectedQuestions = selectedQuestions.slice(0, exam.questionLimit);
+      }
+
+      // Lock in the question set by creating empty responses
+      await prisma.examResponse.createMany({
+        data: selectedQuestions.map(q => ({
+          attemptId: attempt.id,
+          questionId: q.id,
+          answer: "",
+        }))
+      });
+    } else {
+      // Return existing question set based on created responses
+      const responseQuestionIds = existingAttempt.responses.map(r => r.questionId);
+      selectedQuestions = exam.questions.filter(q => responseQuestionIds.includes(q.id));
+      
+      // Sort to match the order of created responses to maintain the same sequence for the student
+      selectedQuestions.sort((a, b) => {
+        return responseQuestionIds.indexOf(a.id) - responseQuestionIds.indexOf(b.id);
+      });
+    }
+
+    return NextResponse.json({ 
+        ...exam, 
+        questions: selectedQuestions, 
+        attempts: [attempt] 
+    });
   } catch (error) {
     console.error("[EXAM_START]", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
