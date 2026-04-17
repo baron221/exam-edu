@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 const NAV = [
   { href: '/admin',          label: 'Dashboard',  icon: '📊' },
@@ -45,12 +46,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }}>
         {/* Brand */}
         <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Image src="/logo_npuu.png" alt="NPUU" width={36} height={36} style={{ objectFit: 'contain' }} />
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.3px' }}>NPUU</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.18em' }}>Teacher Panel</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Image src="/logo_npuu.png" alt="NPUU" width={36} height={36} style={{ objectFit: 'contain' }} />
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.3px' }}>NPUU</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.18em' }}>Teacher Panel</div>
+              </div>
             </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', background: '#f8fafc', padding: '6px', borderRadius: '10px' }}>
+            <LanguageSwitcher />
           </div>
         </div>
 
