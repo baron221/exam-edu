@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/context/LanguageContext';
 
 interface TimerProps {
   initialSeconds: number;
@@ -8,6 +9,7 @@ interface TimerProps {
 }
 
 const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
+  const { t } = useTranslation();
   const [seconds, setSeconds] = useState(initialSeconds);
 
   useEffect(() => {
@@ -36,9 +38,9 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
       style={{ 
         display: 'flex', 
         alignItems: 'center', 
-        gap: '16px', 
-        padding: '10px 28px', 
-        borderRadius: '18px', 
+        gap: '12px', 
+        padding: '6px 20px', 
+        borderRadius: '14px', 
         background: isLowTime ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.9)', 
         border: `1.5px solid ${isLowTime ? 'rgba(239, 68, 68, 0.15)' : 'rgba(99, 102, 241, 0.1)'}`,
         backdropFilter: 'blur(20px)',
@@ -48,8 +50,8 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg 
-            width="18" 
-            height="18" 
+            width="14" 
+            height="14" 
             viewBox="0 0 24 24" 
             fill="none" 
             stroke={isLowTime ? '#ef4444' : '#6366f1'} 
@@ -63,10 +65,10 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
       </div>
 
       <div style={{ 
-        fontSize: '24px', 
+        fontSize: '18px', 
         fontWeight: 900, 
         color: isLowTime ? '#ef4444' : '#0f172a', 
-        letterSpacing: '-1.5px',
+        letterSpacing: '-1px',
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
       }}>
         {formatTime(seconds)}
@@ -77,20 +79,18 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
         flexDirection: 'column', 
         justifyContent: 'center', 
         borderLeft: '1.5px solid rgba(99, 102, 241, 0.1)', 
-        paddingLeft: '16px',
+        paddingLeft: '12px',
         lineHeight: 1.1
       }}>
-        <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em', color: isLowTime ? '#ef4444' : '#6366f1' }}>
-            {isLowTime ? 'URGENT' : 'REMAINING'}
+        <span style={{ fontSize: '7px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: isLowTime ? '#ef4444' : '#6366f1' }}>
+            {isLowTime ? t('urgent') : t('remaining')}
         </span>
-        <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#94a3b8', marginTop: '2px' }}>
-            ACTIVE SESSION
+        <span style={{ fontSize: '6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8', marginTop: '1px' }}>
+            {t('active_session')}
         </span>
       </div>
     </div>
   );
 };
-
-
 
 export default Timer;

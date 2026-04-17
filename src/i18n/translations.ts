@@ -43,10 +43,35 @@ export const translations = {
     return_dashboard: "Boshqaruv paneliga qaytish",
     protocol_verified: "Protokol: Seans yakunlandi",
     pts: "Ball",
+    capacity: "Hajm",
+    units: "Birliklar",
+    protocol_secured: "Protokol: NPUU Core v4.0 himoyasida",
+    kernel_terminal: "Kernel Terminali",
+    compiling: "Kompilyatsiya qilinmoqda...",
+    verify_solution: "Yechimni tekshirish",
+    system_console: "Tizim konsoli chiqishi:",
+    finalize_session: "Seansni yakunlash",
+    finalize_submit: "Yakunlash va topshirish",
+    prevPortal: "Oldingi portal",
+    nextPortal: "Keyingi portal",
+    sequence: "Ketma-ketlik",
+    syncing_data: "Ma'lumotlar sinxronizatsiya qilinmoqda...",
+    no_data: "Ma'lumot mavjud emas",
+    result: "Natija",
+    exec_no_output: "Chiqish ma'lumoti mavjud bo'lmagan holda bajarildi.",
+    
+    // Errors
+    error_load_exam: "Imtihonni yuklashda xatolik yuz berdi.",
+    error_judge_connection: "Judge tizimiga ulanishda xatolik.",
+    error_submit_failed: "Topshirishda xatolik yuz berdi.",
+    error_network: "Tarmoq ulanishida xatolik.",
     
     // Timer
     terminal_time: "Terminal vaqti",
-    minutes: "daqiqalar"
+    minutes: "daq",
+    urgent: "SHOSHILINCH",
+    remaining: "QOLGAN VAQT",
+    active_session: "FAOL SEANS"
   },
   ru: {
     terminal_title: "Терминал НПУУ",
@@ -90,10 +115,35 @@ export const translations = {
     return_dashboard: "Вернуться на панель",
     protocol_verified: "Протокол: Сессия завершена",
     pts: "Баллов",
+    capacity: "Объем",
+    units: "Единицы",
+    protocol_secured: "Протокол: Защищено NPUU Core v4.0",
+    kernel_terminal: "Терминал ядра",
+    compiling: "Компиляция...",
+    verify_solution: "Проверить решение",
+    system_console: "Вывод системной консоли:",
+    finalize_session: "Завершить сессию",
+    finalize_submit: "Завершить и отправить",
+    prevPortal: "Предыдущий портал",
+    nextPortal: "Следующий портал",
+    sequence: "Последовательность",
+    syncing_data: "Синхронизация данных...",
+    no_data: "Данные отсутствуют",
+    result: "Результат",
+    exec_no_output: "Выполнение завершено без вывода.",
+    
+    // Errors
+    error_load_exam: "Ошибка при загрузке экзамена.",
+    error_judge_connection: "Ошибка подключения к системе проверки.",
+    error_submit_failed: "Ошибка при отправке.",
+    error_network: "Ошибка сети.",
     
     // Timer
     terminal_time: "Время терминала",
-    minutes: "мин"
+    minutes: "мин",
+    urgent: "СРОЧНО",
+    remaining: "ОСТАЛОСЬ",
+    active_session: "АКТИВНАЯ СЕССИЯ"
   },
   en: {
     terminal_title: "NPUU Terminal",
@@ -137,9 +187,34 @@ export const translations = {
     return_dashboard: "Return to Dashboard",
     protocol_verified: "Protocol: Session Terminated",
     pts: "Pts",
+    capacity: "Capacity",
+    units: "Units",
+    protocol_secured: "Protocol: Secured Under NPUU Core v4.0",
+    kernel_terminal: "Kernel Terminal",
+    compiling: "Compiling...",
+    verify_solution: "Verify Solution",
+    system_console: "System Output Console:",
+    finalize_session: "Finalize Session",
+    finalize_submit: "Finalize & Submit",
+    prevPortal: "Prev Portal",
+    nextPortal: "Next Portal",
+    sequence: "Sequence",
+    syncing_data: "Synchronizing Data...",
+    no_data: "No Data Available",
+    result: "Result",
+    exec_no_output: "Execution completed with no output.",
+    
+    // Errors
+    error_load_exam: "Failed to load exam.",
+    error_judge_connection: "Connection to judge failed.",
+    error_submit_failed: "Submission failed.",
+    error_network: "Network error during submission.",
     
     // Timer
     terminal_time: "Terminal Time",
-    minutes: "min"
+    minutes: "min",
+    urgent: "URGENT",
+    remaining: "REMAINING",
+    active_session: "ACTIVE SESSION"
   }
 };

@@ -30,7 +30,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     const loadExam = async () => {
       try {
         const res = await fetch(`/api/exams/${examId}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Failed to load exam.');
+        if (!res.ok) throw new Error(t('error_load_exam'));
         const data = await res.json();
         setExam(data);
         
@@ -55,7 +55,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     try {
       const res = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to start exam.');
+      if (!res.ok) throw new Error(data.error || t('authenticating'));
       
       // Update states from the consolidated response
       setExam(data);
@@ -86,7 +86,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
       const data = await res.json();
       setJudgeResult(data);
     } catch (err) {
-      setJudgeResult({ error: 'Connection to judge failed.' });
+      setJudgeResult({ error: t('error_judge_connection') });
     } finally {
       setJudging(false);
     }
@@ -107,10 +107,10 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
         router.push(`/exams/${examId}/result`);
       } else {
         const data = await res.json();
-        alert(data.error || 'Submission failed.');
+        alert(data.error || t('error_submit_failed'));
       }
     } catch (err) {
-      alert('Network error during submission.');
+      alert(t('error_network'));
     } finally {
       setSubmitting(false);
     }
@@ -129,25 +129,25 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
           <div className="relative w-24 h-24 mx-auto mb-10 opacity-80">
             <Image src="/logo_npuu.png" alt="NPUU Logo" fill className="object-contain" />
           </div>
-          <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-[0.3em] mb-4">{t('terminal_title')}</h2>
-          <h1 style={{ fontSize: '48px', fontWeight: 900, color: '#fff', marginBottom: '16px', letterSpacing: '-1.5px' }}>{exam.title}</h1>
-          <p className="text-slate-400 font-medium mb-12 max-w-md mx-auto leading-relaxed text-sm">{exam.description || t('dashboard_desc')}</p>
+          <h2 className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.3em] mb-2">{t('terminal_title')}</h2>
+          <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '12px', letterSpacing: '-1px' }}>{exam.title}</h1>
+          <p className="text-slate-400 font-medium mb-8 max-w-sm mx-auto leading-relaxed text-[13px]">{exam.description || t('dashboard_desc')}</p>
           
-          <div className="flex justify-center gap-16 mb-12 border-y border-white/5 py-10">
+          <div className="flex justify-center gap-10 mb-8 border-y border-white/5 py-6">
             <div className="text-center">
-              <div className="text-[10px] font-extrabold text-white/20 uppercase tracking-[0.2em] mb-3">{t('time_limit')}</div>
-              <div className="text-4xl font-black text-white leading-none">{exam.timeLimit} <span className="text-xs text-white/30 uppercase tracking-widest ml-1">{t('minutes')}</span></div>
+              <div className="text-[9px] font-extrabold text-white/20 uppercase tracking-[0.2em] mb-2">{t('time_limit')}</div>
+              <div className="text-3xl font-black text-white leading-none">{exam.timeLimit} <span className="text-[10px] text-white/30 uppercase tracking-widest ml-1">{t('minutes')}</span></div>
             </div>
-            <div className="text-center border-l border-white/5 pl-16">
-              <div className="text-[10px] font-extrabold text-white/20 uppercase tracking-[0.2em] mb-3">Capacity</div>
-              <div className="text-4xl font-black text-white leading-none">{exam.questionsCount || exam.questions?.length || 0} <span className="text-xs text-white/30 uppercase tracking-widest ml-1">Units</span></div>
+            <div className="text-center border-l border-white/5 pl-10">
+              <div className="text-[9px] font-extrabold text-white/20 uppercase tracking-[0.2em] mb-2">{t('capacity')}</div>
+              <div className="text-3xl font-black text-white leading-none">{exam.questionsCount || exam.questions?.length || 0} <span className="text-[10px] text-white/30 uppercase tracking-widest ml-1">{t('units')}</span></div>
             </div>
           </div>
 
-          <button className={styles.submitBtn} style={{ width: 'auto', padding: '1.4rem 4.5rem', fontSize: '16px' }} onClick={startExam} disabled={starting}>
+          <button className={styles.submitBtn} style={{ width: 'auto', padding: '1rem 3.5rem', fontSize: '14px' }} onClick={startExam} disabled={starting}>
             {starting ? `${t('authenticating')}...` : `⚡ ${t('enter_portal')}`}
           </button>
-          <p className="mt-12 text-[9px] font-black text-white/10 uppercase tracking-[0.4em]">Protocol: Secured Under NPUU Core v4.0</p>
+          <p className="mt-8 text-[8px] font-black text-white/10 uppercase tracking-[0.3em]">{t('protocol_secured')}</p>
         </div>
       </div>
     );
@@ -158,11 +158,11 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
     if (attempt?.status === 'IN_PROGRESS') {
         return (
           <div className={styles.loadingOverlay}>
-            <div className={styles.loadingText}>Synchronizing Data...</div>
+            <div className={styles.loadingText}>{t('syncing_data')}</div>
           </div>
         );
     }
-    return <div className={styles.loadingOverlay}><div className={styles.loadingText}>No Data Available</div></div>;
+    return <div className={styles.loadingOverlay}><div className={styles.loadingText}>{t('no_data')}</div></div>;
   }
 
   const currentQ = exam.questions[currentIndex];
@@ -227,7 +227,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
             backdropFilter: 'blur(20px)'
           }}>
             <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" /> Finalize Seans
+              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" /> {t('finalize_session')}
             </h5>
             <p className="text-[11px] leading-relaxed text-indigo-300/40 font-medium italic mb-8">
                 Consistency is the hallmark of architectural integrity.
@@ -237,7 +237,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                 className={styles.submitBtn}
                 style={{ width: '100%', fontSize: '10px', padding: '16px' }}
             >
-                🏁 Finalize & Submit
+                🏁 {t('finalize_submit')}
             </button>
           </div>
         </aside>
@@ -265,10 +265,10 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
               <div className={styles.codingArea}>
                 <div className={styles.editorHeader}>
                   <div className="flex items-center gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
-                    <span className="text-xs">💻</span> Kernel Terminal
+                    <span className="text-xs">💻</span> {t('kernel_terminal')}
                   </div>
                   <button className={styles.runBtn} onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '')} disabled={judging}>
-                    {judging ? 'Compiling...' : '▶ Verify Solution'}
+                    {judging ? t('compiling') : `▶ ${t('verify_solution')}`}
                   </button>
                 </div>
                 
@@ -277,16 +277,16 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                       theme="light"
                       value={answers[currentQ.id] || currentQ.starterCode || ''} 
                       onChange={(val) => handleAnswer(currentQ.id, val || '')}
-                      height="700px"
+                      height="460px"
                   />
                 </div>
 
                 {judgeResult && (
                   <div className={styles.judgeResult}>
                     <div className="flex justify-between items-center mb-6">
-                        <div className="font-bold uppercase tracking-[0.15em] text-[9px] text-white/20">System Output Console:</div>
+                        <div className="font-bold uppercase tracking-[0.15em] text-[9px] text-white/20">{t('system_console')}</div>
                         <div className={`text-[10px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                            {judgeResult.status?.description || 'Result'}
+                            {judgeResult.status?.description || t('result')}
                         </div>
                     </div>
                     <pre className="whitespace-pre-wrap text-emerald-400/80 font-mono text-[13px] leading-relaxed">
@@ -302,7 +302,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                                 </>
                             );
                         })()}
-                        {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && 'Execution completed with no output.'}
+                        {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
                         {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
                     </pre>
                   </div>
