@@ -69,6 +69,37 @@ export async function POST(req: Request, { params }: { params: Promise<{ params?
     return NextResponse.json(exam);
   }
 
+  // Case: POST /api/admin/exams/ID/bulk
+  if (slug.length === 2 && slug[1] === 'bulk') {
+    const examId = slug[0];
+    const { questions } = await req.json();
+    if (!Array.isArray(questions)) return NextResponse.json({ error: 'Questions array required' }, { status: 400 });
+
+    const count = await prisma.examQuestion.count({ where: { examId } });
+    
+    const createdQuestions = await prisma.$transaction(
+      questions.map((q, idx) => 
+        prisma.examQuestion.create({
+          data: {
+            examId,
+            text: q.text,
+            type: q.type || 'MCQ',
+            points: q.points || 1,
+            explanation: q.explanation || '',
+            starterCode: q.starterCode || '',
+            language: q.language || 'cpp',
+            order: count + idx,
+            options: {
+              create: q.options?.map((o: any) => ({ text: o.text, isCorrect: o.isCorrect })) || [],
+            },
+          },
+          include: { options: true },
+        })
+      )
+    );
+    return NextResponse.json(createdQuestions);
+  }
+
   // Case: POST /api/admin/exams/ID/questions
   if (slug.length === 2 && slug[1] === 'questions') {
     const examId = slug[0];
