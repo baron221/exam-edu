@@ -368,6 +368,7 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                             </>
                           )}
                         </div>
+                      </div>
                     </div>
                   </div>
                 </div>
