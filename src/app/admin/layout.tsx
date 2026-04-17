@@ -6,18 +6,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-
-const NAV = [
-  { href: '/admin',          label: 'Dashboard',  icon: '📊' },
-  { href: '/admin/exams',    label: 'Exams',       icon: '📝' },
-  { href: '/admin/courses',  label: 'Courses',     icon: '📚' },
-  { href: '/admin/students', label: 'Students',    icon: '👥' },
-];
+import { useTranslation } from '@/context/LanguageContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+
+  const NAV = [
+    { href: '/admin',          label: t('dashboard'),  icon: '📊' },
+    { href: '/admin/exams',    label: t('exams'),       icon: '📝' },
+    { href: '/admin/courses',  label: t('courses'),     icon: '📚' },
+    { href: '/admin/students', label: t('students'),    icon: '👥' },
+  ];
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');

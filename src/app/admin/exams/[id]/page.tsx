@@ -191,27 +191,27 @@ export default function ExamDetailPage() {
       <Toaster position="top-right" />
       
       <button onClick={() => router.back()} className={styles.backBtn}>
-        <ChevronLeft size={14} /> Back to Examinations
+        <ChevronLeft size={14} /> {t('back_to_exams')}
       </button>
       
       <div className={styles.examHeader}>
-        <span className={styles.typeBadge}>Terminal Protocol: {exam.type}</span>
+        <span className={styles.typeBadge}>{t('terminal_protocol')}: {exam.type}</span>
         <h1 className={styles.title}>{exam.title}</h1>
         <p className={styles.description}>{exam.description || 'Secure examination environment established for the National Pedagogical University.'}</p>
         
         <div className={styles.metaGrid}>
           <div className={styles.metaItem}>
-            <span className={styles.metaLabel}>Academic Course</span>
+            <span className={styles.metaLabel}>{t('academic_course')}</span>
             <span className={styles.metaValue}>{exam.course.title}</span>
           </div>
           <div className={styles.metaDivider} />
           <div className={styles.metaItem}>
-            <span className={styles.metaLabel}>Session Duration</span>
-            <span className={styles.metaValue}>{exam.timeLimit} Minutes</span>
+            <span className={styles.metaLabel}>{t('session_duration')}</span>
+            <span className={styles.metaValue}>{exam.timeLimit} {t('minutes')}</span>
           </div>
           <div className={styles.metaDivider} />
           <div className={styles.metaItem}>
-            <span className={styles.metaLabel}>Pass Threshold</span>
+            <span className={styles.metaLabel}>{t('pass_threshold')}</span>
             <span className={styles.metaValue}>{exam.passingScore}% Accuracy</span>
           </div>
         </div>
@@ -221,13 +221,13 @@ export default function ExamDetailPage() {
         
         <div className="space-y-6">
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Question Repository ({exam.questions.length})</h2>
+            <h2 className={styles.sectionTitle}>{t('question_repository')} ({exam.questions.length})</h2>
             <div className={styles.actionRow}>
                 <button onClick={() => { setBulkMode('TEXT'); setShowBulkModal(true); }} className={styles.secondaryBtn}>
-                    <FileStack size={14} /> Bulk Import
+                    <FileStack size={14} /> {t('bulk_import')}
                 </button>
                 <button onClick={() => { setBulkMode('AI'); setShowBulkModal(true); }} className={styles.primaryBtn}>
-                    <Sparkles size={14} /> Magic AI
+                    <Sparkles size={14} /> {t('magic_ai')}
                 </button>
             </div>
           </div>
@@ -236,7 +236,7 @@ export default function ExamDetailPage() {
             {exam.questions.length === 0 ? (
               <div className={styles.emptyState}>
                 <AlertCircle size={32} />
-                No questions defined for this protocol
+                {t('no_exams_title')}
               </div>
             ) : exam.questions.map((q: any, idx: number) => (
               <div key={q.id} className={styles.questionCard}>
@@ -272,7 +272,7 @@ export default function ExamDetailPage() {
 
         <div className={styles.sidebarCard}>
           <h3 className={styles.sideTitle}>
-            <Plus size={16} color="#6366f1" /> Manual Injection
+            <Plus size={16} color="#6366f1" /> {t('manual_injection')}
           </h3>
 
           <div className={styles.tabGroup}>
@@ -282,13 +282,13 @@ export default function ExamDetailPage() {
 
           <form onSubmit={handleAddQuestion}>
             <div className={styles.formField}>
-              <label className={styles.label}>Question Content</label>
-              <textarea required value={qText} onChange={e => setQText(e.target.value)} rows={4} className={styles.inputArea} placeholder="Enter problem statement..." />
+              <label className={styles.label}>{t('question_content')}</label>
+              <textarea required value={qText} onChange={e => setQText(e.target.value)} rows={4} className={styles.inputArea} placeholder="..." />
             </div>
             
             {qType === 'MCQ' ? (
               <div className={styles.formField}>
-                <label className={styles.label}>Option Pool</label>
+                <label className={styles.label}>{t('option_pool')}</label>
                 {options.map((opt, idx) => (
                   <div key={idx} className={styles.optionInputGroup}>
                     <input type="text" value={opt.text} onChange={e => {
@@ -307,13 +307,13 @@ export default function ExamDetailPage() {
               </div>
             ) : (
               <div className={styles.formField}>
-                <label className={styles.label}>Starter Skeleton</label>
+                <label className={styles.label}>{t('starter_skeleton')}</label>
                 <textarea value={starterCode} onChange={e => setStarterCode(e.target.value)} rows={8} className={styles.inputArea} style={{ fontFamily: 'monospace', background: '#1e293b', color: '#10b981', fontSize: '12px' }} />
               </div>
             )}
 
             <button type="submit" disabled={loadingAdd} className={styles.submitBtn}>
-              {loadingAdd ? <RefreshCw className="animate-spin" size={14} /> : 'Finalize & Inject'}
+              {loadingAdd ? <RefreshCw className="animate-spin" size={14} /> : t('finalize_inject')}
             </button>
           </form>
         </div>
@@ -328,8 +328,8 @@ export default function ExamDetailPage() {
                             {bulkMode === 'AI' ? <Sparkles color="#6366f1" /> : <FileStack color="#6366f1" />}
                         </div>
                         <div>
-                            <h2 style={{ fontSize: 24, fontWeight: 950, margin: 0 }}>{bulkMode === 'AI' ? 'Magic AI Genesis' : 'Smart Protocol Import'}</h2>
-                            <p style={{ margin: 0, color: '#94a3b8', fontSize: 13, fontWeight: 700 }}>{bulkMode === 'AI' ? 'Leverage Gemini 2.5 Flash for industrial-grade question synthesis.' : 'Parse raw educational text into structured database units.'}</p>
+                            <h2 style={{ fontSize: 24, fontWeight: 950, margin: 0 }}>{bulkMode === 'AI' ? t('magic_ai_genesis') : t('bulk_import')}</h2>
+                            <p style={{ margin: 0, color: '#94a3b8', fontSize: 13, fontWeight: 700 }}>{t('industrial_grade_synthesis')}</p>
                         </div>
                     </div>
                     <button onClick={() => setShowBulkModal(false)} className={styles.deleteBtn} style={{ opacity: 1, color: '#94a3b8' }}>
@@ -343,9 +343,9 @@ export default function ExamDetailPage() {
                             {bulkMode === 'AI' ? (
                                 <div className="space-y-4">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <label className={styles.label}>Synthesis Prompt</label>
+                                        <label className={styles.label}>{t('question_content')}</label>
                                         <div className={styles.quantityControl}>
-                                            <span style={{ fontSize: 9, fontWeight: 900, color: '#cbd5e1' }}>REQ QTY:</span>
+                                            <span style={{ fontSize: 9, fontWeight: 900, color: '#cbd5e1' }}>{t('req_qty')}:</span>
                                             <input 
                                               type="number" 
                                               min="1" max="25" 
@@ -361,40 +361,40 @@ export default function ExamDetailPage() {
                                         onChange={e => setAiPrompt(e.target.value)}
                                         className={styles.inputArea}
                                         style={{ fontSize: 16 }}
-                                        placeholder="Describe the topic (e.g., 'Core OOP concepts in C++, focused on encapsulation')..." 
+                                        placeholder="..." 
                                     />
                                     <button onClick={generateAIQuestions} disabled={loadingBulk} className={styles.primaryBtn} style={{ width: '100%', height: 64, justifyContent: 'center', fontSize: 13 }}>
-                                        {loadingBulk ? <RefreshCw className="animate-spin" /> : <><Sparkles /> Initiate Generation</>}
+                                        {loadingBulk ? <RefreshCw className="animate-spin" /> : <><Sparkles /> {t('initiate_generation')}</>}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    <label className={styles.label}>Educational Source Metadata</label>
+                                    <label className={styles.label}>{t('question_content')}</label>
                                     <textarea 
                                         rows={12} 
                                         value={bulkInput}
                                         onChange={e => setBulkInput(e.target.value)}
                                         className={styles.inputArea}
                                         style={{ fontFamily: 'monospace', fontSize: 12 }}
-                                        placeholder="Q: What is a pointer?\n* A variable for memory address\n- A type of integer"
+                                        placeholder="Q: What is a pointer?..."
                                     />
                                     <button onClick={parseSmartText} className={styles.submitBtn}>
-                                        <FileStack size={14} /> Execute Smart Parser
+                                        <FileStack size={14} /> {t('bulk_import')}
                                     </button>
                                 </div>
                             )}
 
                             <div style={{ padding: 24, background: 'rgba(99, 102, 241, 0.03)', borderRadius: 24, border: '1px solid rgba(99, 102, 241, 0.05)' }}>
-                                <div style={{ fontSize: 9, fontWeight: 950, color: '#6366f1', marginBottom: 8, letterSpacing: '0.1em' }}><AlertCircle size={10} style={{ marginBottom: -2 }} /> PIPELINE SPECS</div>
-                                <p style={{ margin: 0, fontSize: 11, color: '#64748b', fontWeight: 700, lineHeight: 1.6 }}>System supports Multi-Question synthesis. Ensure all MCQ correct answers are identified before batch injection.</p>
+                                <div style={{ fontSize: 9, fontWeight: 950, color: '#6366f1', marginBottom: 8, letterSpacing: '0.1em' }}><AlertCircle size={10} style={{ marginBottom: -2 }} /> {t('pipeline_specs')}</div>
+                                <p style={{ margin: 0, fontSize: 11, color: '#64748b', fontWeight: 700, lineHeight: 1.6 }}>{t('process_complete')}</p>
                             </div>
                         </div>
 
                         <div>
-                            <h3 style={{ fontSize: 12, fontWeight: 950, color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 20 }}>Staging Area ({pendingQuestions.length})</h3>
+                            <h3 style={{ fontSize: 12, fontWeight: 950, color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 20 }}>{t('staging_area')} ({pendingQuestions.length})</h3>
                             <div className={styles.previewList} style={{ maxHeight: 480, overflowY: 'auto', paddingRight: 8 }}>
                                 {pendingQuestions.length === 0 ? (
-                                    <div className={styles.emptyState} style={{ height: 200, borderRadius: 24 }}>STAGING EMPTY</div>
+                                    <div className={styles.emptyState} style={{ height: 200, borderRadius: 24 }}>{t('no_data')}</div>
                                 ) : pendingQuestions.map((pq, qIdx) => (
                                     <div key={qIdx} className={styles.stageCard}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -451,7 +451,7 @@ export default function ExamDetailPage() {
                         className={styles.primaryBtn}
                         style={{ background: '#10b981', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.1)' }}
                     >
-                        {loadingBulk ? <RefreshCw className="animate-spin" /> : <><CheckCircle2 /> Inject Stage Into Database</>}
+                        {loadingBulk ? <RefreshCw className="animate-spin" /> : <><CheckCircle2 /> {t('inject_stage')}</>}
                     </button>
                 </div>
             </div>
