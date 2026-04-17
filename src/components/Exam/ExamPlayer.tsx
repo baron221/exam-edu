@@ -272,41 +272,54 @@ export default function ExamPlayer({ examId }: ExamPlayerProps) {
                   </button>
                 </div>
                 
-                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-white">
-                  <MonacoEditor 
-                      theme="vs-dark"
-                      value={answers[currentQ.id] || currentQ.starterCode || ''} 
-                      onChange={(val) => handleAnswer(currentQ.id, val || '')}
-                      height="460px"
-                  />
-                </div>
-
-                {judgeResult && (
-                  <div className={styles.judgeResult}>
-                    <div className="flex justify-between items-center mb-6">
-                        <div className="font-bold uppercase tracking-[0.15em] text-[9px] text-white/20">{t('system_console')}</div>
-                        <div className={`text-[10px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                            {judgeResult.status?.description || t('result')}
-                        </div>
-                    </div>
-                    <pre className="whitespace-pre-wrap text-emerald-400/80 font-mono text-[13px] leading-relaxed">
-                        {(() => {
-                            const safeAtob = (str: string) => {
-                                try { return atob(str); } catch (e) { return str; }
-                            };
-                            return (
-                                <>
-                                    {judgeResult.stdout ? safeAtob(judgeResult.stdout) : ''}
-                                    {judgeResult.stderr ? safeAtob(judgeResult.stderr) : ''}
-                                    {judgeResult.compile_output ? safeAtob(judgeResult.compile_output) : ''}
-                                </>
-                            );
-                        })()}
-                        {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
-                        {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
-                    </pre>
+                <div className={styles.workspace}>
+                  <div className={styles.editorContainer}>
+                    <MonacoEditor 
+                        theme="vs-dark"
+                        value={answers[currentQ.id] || currentQ.starterCode || ''} 
+                        onChange={(val) => handleAnswer(currentQ.id, val || '')}
+                        height="460px"
+                    />
                   </div>
-                )}
+
+                  {(judgeResult || judging) && (
+                    <div className={styles.judgeResult}>
+                      <div className="flex justify-between items-center mb-4">
+                          <div className="font-bold uppercase tracking-[0.15em] text-[8px] text-white/20">{t('system_console')}</div>
+                          {judgeResult && (
+                            <div className={`text-[9px] font-black px-3 py-1 rounded-full ${judgeResult.status?.id === 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                {judgeResult.status?.description || t('result')}
+                            </div>
+                          )}
+                      </div>
+                      <pre className="whitespace-pre-wrap text-emerald-400/80 font-mono text-[12px] leading-relaxed flex-1 overflow-y-auto">
+                          {judging ? (
+                            <div className="flex flex-col gap-2 h-full justify-center items-center opacity-40">
+                              <div className="w-4 h-4 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                              <div className="text-[10px] uppercase tracking-widest">{t('compiling')}</div>
+                            </div>
+                          ) : (
+                            <>
+                              {(() => {
+                                  const safeAtob = (str: string) => {
+                                      try { return atob(str); } catch (e) { return str; }
+                                  };
+                                  return (
+                                      <>
+                                          {judgeResult.stdout ? safeAtob(judgeResult.stdout) : ''}
+                                          {judgeResult.stderr ? safeAtob(judgeResult.stderr) : ''}
+                                          {judgeResult.compile_output ? safeAtob(judgeResult.compile_output) : ''}
+                                      </>
+                                  );
+                              })()}
+                              {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
+                              {judgeResult.error && <span className="text-red-400">{judgeResult.error}</span>}
+                            </>
+                          )}
+                      </pre>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

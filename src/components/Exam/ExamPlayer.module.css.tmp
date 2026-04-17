@@ -1,0 +1,68 @@
+.codingArea {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 10px 20px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+}
+
+.runBtn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.runBtn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.runBtn:disabled {
+  opacity: 0.5;
+}
+
+.workspace {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+.editorContainer {
+  flex: 1.6;
+  min-width: 0;
+}
+
+.judgeResult {
+  flex: 1;
+  padding: 20px;
+  border-radius: 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.05);
+  color: #cbd5e1;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 20px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+}
