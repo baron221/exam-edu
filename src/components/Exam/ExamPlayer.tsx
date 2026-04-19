@@ -145,7 +145,11 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   };
 
   if (loading || !exam || !attempt) {
-    return <div className={styles.loadingOverlay}>{t('authenticating')}...</div>;
+    return (
+        <div className={styles.loadingOverlay}>
+            <div className={styles.loadingText}>{t('authenticating')}</div>
+        </div>
+    );
   }
 
   const currentQ = exam.questions[currentIndex];
@@ -157,7 +161,11 @@ export default function ExamPlayer({ examId }: { examId: string }) {
 
   return (
     <div className={styles.viewer}>
-      {submitting && <div className={styles.loadingOverlay}>{t('authenticating')}...</div>}
+      {submitting && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingText}>Syncing Protocol...</div>
+        </div>
+      )}
       
       <header className={styles.header}>
         <div className="flex items-center gap-4">
@@ -208,7 +216,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
             ) : (
               <div className={styles.codingArea}>
                 <div className={styles.editorHeader}>
-                  <div className="font-semibold text-slate-500">{t('kernel_terminal')}</div>
+                  <div className="font-semibold text-slate-500 uppercase text-[10px] tracking-widest">{t('kernel_terminal')}</div>
                   <button 
                     className={styles.runBtn} 
                     onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '', stdin, currentQ.language || 'cpp')}
@@ -224,7 +232,14 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                         theme="vs-dark"
                         value={answers[currentQ.id] || currentQ.starterCode || ''} 
                         onChange={(val) => handleAnswer(currentQ.id, val || '')}
-                        height="400px"
+                        height="100%"
+                        options={{
+                            minimap: { enabled: false },
+                            fontSize: 14,
+                            lineNumbers: 'on',
+                            scrollBeyondLastLine: false,
+                            automaticLayout: true,
+                        }}
                     />
                   </div>
                   <div className={styles.judgeResult}>
@@ -245,7 +260,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                     </div>
 
                     <div className={styles.inputArea}>
-                      <div className={styles.panelLabel}>{t('custom_input')}</div>
+                      <div className={styles.panelLabel}>{t('custom_input')} (stdin)</div>
                       <div className={styles.inputWrapper}>
                          <span className={styles.terminalPrompt}>$</span>
                          <textarea 
