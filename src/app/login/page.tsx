@@ -152,9 +152,9 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="text" required value={name}
-                    onChange={e => setName(e.target.value)}
+                    onChange={e => setName(e.target.value.toUpperCase())}
                     placeholder={t('name_placeholder')}
-                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none', textTransform: 'uppercase' }}
                   />
                 </div>
 
@@ -165,9 +165,9 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="text" required value={idCode}
-                    onChange={e => setIdCode(e.target.value)}
+                    onChange={e => setIdCode(e.target.value.toUpperCase())}
                     placeholder="Talabalar raqamingiz"
-                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none', textTransform: 'uppercase' }}
                   />
                 </div>
 
@@ -178,9 +178,9 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="text" required value={groupName}
-                    onChange={e => setGroupName(e.target.value)}
+                    onChange={e => setGroupName(e.target.value.toUpperCase())}
                     placeholder="Masalan: 921-GURUH"
-                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none', textTransform: 'uppercase' }}
                   />
                 </div>
               </>
