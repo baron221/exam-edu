@@ -54,11 +54,11 @@ export const authOptions: NextAuthOptions = {
         const email = `${credentials.idCode.toLowerCase()}@exam.edunation.uz`;
         
         const user = await prisma.user.upsert({
-          where: { studentId: credentials.idCode },
+          where: { email },
           update: { 
               name: credentials.name,
               groupName: credentials.groupName,
-              email // keep email consistent for adapters
+              studentId: credentials.idCode,
           },
           create: {
             name: credentials.name,
