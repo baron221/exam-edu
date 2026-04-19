@@ -43,19 +43,28 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         name: { label: "Name", type: "text" },
         idCode: { label: "ID (starts with 250)", type: "text" },
+        groupName: { label: "Group", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.name || !credentials?.idCode) return null;
-        if (!/^250\d{3}$/.test(credentials.idCode)) return null;
+        if (!credentials?.name || !credentials?.idCode || !credentials?.groupName) return null;
+        
+        // Loosened ID regex to support typical University IDs (e.g. at least 3 chars)
+        if (credentials.idCode.length < 3) return null;
 
-        const email = `${credentials.idCode}@exam.edunation.uz`;
+        const email = `${credentials.idCode.toLowerCase()}@exam.edunation.uz`;
         
         const user = await prisma.user.upsert({
-          where: { email },
-          update: { name: credentials.name },
+          where: { studentId: credentials.idCode },
+          update: { 
+              name: credentials.name,
+              groupName: credentials.groupName,
+              email // keep email consistent for adapters
+          },
           create: {
             name: credentials.name,
             email,
+            studentId: credentials.idCode,
+            groupName: credentials.groupName,
             role: "student",
           },
         });

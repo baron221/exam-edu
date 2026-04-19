@@ -19,7 +19,7 @@ export async function POST(
     // Check for existing attempt and responses
     const existingAttempt = await prisma.examAttempt.findUnique({
       where: { userId_examId: { userId, examId } },
-      include: { responses: true }
+      include: { responses: true, user: { select: { language: true } } }
     });
 
     const attempt = await prisma.examAttempt.upsert({
@@ -34,6 +34,7 @@ export async function POST(
         status: "IN_PROGRESS",
         startTime: new Date(),
       },
+      include: { user: { select: { language: true } } }
     });
 
     const exam = await prisma.exam.findUnique({
@@ -85,7 +86,8 @@ export async function POST(
     return NextResponse.json({ 
         ...exam, 
         questions: selectedQuestions, 
-        attempts: [attempt] 
+        attempts: [attempt],
+        userLanguage: attempt.user?.language || 'uz'
     });
   } catch (error) {
     console.error("[EXAM_START]", error);

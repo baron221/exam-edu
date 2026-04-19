@@ -34,16 +34,19 @@ model Session {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String?       @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          String        @default("student")
-  accounts      Account[]
-  attempts      ExamAttempt[]
-  sessions      Session[]
+  id               String        @id @default(cuid())
+  name             String?
+  email            String?       @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  role             String        @default("student")
+  studentId        String?       @unique
+  groupName        String?
+  language         String        @default("uz") // uz or ru
+  accounts         Account[]
+  attempts         ExamAttempt[]
+  sessions         Session[]
 }
 
 model VerificationToken {
@@ -84,19 +87,21 @@ model Exam {
 }
 
 model ExamQuestion {
-  id          String         @id @default(cuid())
-  examId      String
-  type        QuestionType   @default(MCQ)
-  text        String
-  explanation String?
-  order       Int            @default(0)
-  points      Int            @default(1)
-  language    String?        @default("cpp")
-  starterCode String?
-  testCases   Json?
-  options     ExamOption[]
-  exam        Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  responses   ExamResponse[]
+  id            String         @id @default(cuid())
+  examId        String
+  type          QuestionType   @default(MCQ)
+  text          String
+  textRu        String?
+  explanation   String?
+  explanationRu String?
+  order         Int            @default(0)
+  points        Int            @default(1)
+  language      String?        @default("cpp")
+  starterCode   String?
+  testCases     Json?
+  options       ExamOption[]
+  exam          Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  responses     ExamResponse[]
 
   @@index([examId])
 }
@@ -105,22 +110,27 @@ model ExamOption {
   id         String       @id @default(cuid())
   questionId String
   text       String
+  textRu     String?
   isCorrect  Boolean      @default(false)
   question   ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model ExamAttempt {
-  id           String         @id @default(cuid())
-  examId       String
-  userId       String
-  startTime    DateTime       @default(now())
-  submittedAt  DateTime?
-  score        Float          @default(0)
-  status       String         @default("IN_PROGRESS")
-  warningCount Int            @default(0)
-  exam         Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  responses    ExamResponse[]
+  id             String         @id @default(cuid())
+  examId         String
+  userId         String
+  startTime      DateTime       @default(now())
+  submittedAt    DateTime?
+  score          Float          @default(0)
+  status         String         @default("IN_PROGRESS")
+  warningCount   Int            @default(0)
+  isAppealed     Boolean        @default(false)
+  appealMessage  String?
+  appealStatus   String?        // PENDING, APPROVED, REJECTED
+  appealFeedback String?
+  exam           Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses      ExamResponse[]
 
   @@unique([userId, examId])
   @@index([examId])

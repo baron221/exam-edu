@@ -53,7 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ params?
 
   // Case: POST /api/admin/exams/list (create new)
   if (slug.length === 0 || slug[0] === 'list') {
-    const { title, description, courseId, type, timeLimit, passingScore } = await req.json();
+    const { title, description, courseId, type, timeLimit, passingScore, shuffleQuestions } = await req.json();
     if (!title || !courseId) return NextResponse.json({ error: 'title and courseId required' }, { status: 400 });
     const exam = await prisma.exam.create({
       data: {
@@ -63,6 +63,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ params?
         type: type || 'MIDTERM',
         timeLimit: timeLimit || 60,
         passingScore: passingScore || 60,
+        shuffleQuestions: shuffleQuestions || false,
       },
       include: { course: { select: { title: true } } },
     });
@@ -83,14 +84,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ params?
           data: {
             examId,
             text: q.text,
+            textRu: q.textRu || null,
             type: q.type || 'MCQ',
             points: q.points || 1,
             explanation: q.explanation || '',
+            explanationRu: q.explanationRu || null,
             starterCode: q.starterCode || '',
             language: q.language || 'cpp',
             order: count + idx,
             options: {
-              create: q.options?.map((o: any) => ({ text: o.text, isCorrect: o.isCorrect })) || [],
+              create: q.options?.map((o: any) => ({ text: o.text, textRu: o.textRu || null, isCorrect: o.isCorrect })) || [],
             },
           },
           include: { options: true },
@@ -103,20 +106,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ params?
   // Case: POST /api/admin/exams/ID/questions
   if (slug.length === 2 && slug[1] === 'questions') {
     const examId = slug[0];
-    const { text, type, points, explanation, options, starterCode, language } = await req.json();
+    const { text, textRu, type, points, explanation, explanationRu, options, starterCode, language } = await req.json();
     const count = await prisma.examQuestion.count({ where: { examId } });
     const question = await prisma.examQuestion.create({
       data: {
         examId,
         text,
+        textRu: textRu || null,
         type,
         points: points || 1,
         explanation: explanation || '',
+        explanationRu: explanationRu || null,
         starterCode: starterCode || '',
         language: language || '',
         order: count,
         options: {
-          create: options.map((o: any) => ({ text: o.text, isCorrect: o.isCorrect })),
+          create: options.map((o: any) => ({ text: o.text, textRu: o.textRu || null, isCorrect: o.isCorrect })),
         },
       },
       include: { options: true },
@@ -142,6 +147,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ para
       timeLimit: data.timeLimit,
       passingScore: data.passingScore,
       type: data.type,
+      shuffleQuestions: data.shuffleQuestions,
     },
   });
   return NextResponse.json(exam);

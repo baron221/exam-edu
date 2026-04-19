@@ -211,7 +211,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
       });
-      router.push('/dashboard');
+      router.push(`/exams/${examId}/result`);
     } catch (error) {
       console.error(error);
     } finally {
@@ -264,7 +264,9 @@ export default function ExamPlayer({ examId }: { examId: string }) {
 
         <section className={styles.content}>
           <div className={styles.questionCard}>
-            <div className={styles.questionText}>{currentQ.text}</div>
+            <div className={styles.questionText}>
+              {(exam.userLanguage === 'ru' && currentQ.textRu) ? currentQ.textRu : currentQ.text}
+            </div>
 
             {currentQ.type === 'MCQ' ? (
               <div className={styles.optionsList}>
@@ -275,7 +277,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                     onClick={() => handleAnswer(currentQ.id, opt.id)}
                   >
                     <div className={styles.optionLetter}>{String.fromCharCode(65 + idx)}</div>
-                    <div>{opt.text}</div>
+                    <div>{(exam.userLanguage === 'ru' && opt.textRu) ? opt.textRu : opt.text}</div>
                   </button>
                 ))}
               </div>

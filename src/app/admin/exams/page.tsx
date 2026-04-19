@@ -15,6 +15,7 @@ export default function AdminExamsPage() {
   const [courseId, setCourseId] = useState('');
   const [type, setType] = useState('MIDTERM');
   const [timeLimit, setTimeLimit] = useState(60);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
 
   useEffect(() => {
@@ -33,13 +34,14 @@ export default function AdminExamsPage() {
     setLoadingCreate(true);
     const res = await fetch('/api/admin/exams', {
       method: 'POST',
-      body: JSON.stringify({ title, courseId, type, timeLimit }),
+      body: JSON.stringify({ title, courseId, type, timeLimit, shuffleQuestions }),
     });
     if (res.ok) {
       const newExam = await res.json();
       setExams([newExam, ...exams]);
       setShowModal(false);
       setTitle('');
+      setShuffleQuestions(false);
     } else {
       alert('Failed to create exam');
     }
@@ -77,8 +79,11 @@ export default function AdminExamsPage() {
             
             <div style={{ display: 'flex', gap: 10, borderTop: '1px solid #f1f5f9', paddingTop: 20 }}>
               <Link href={`/admin/exams/${exam.id}`} style={{ flex: 1, textAlign: 'center', padding: '10px', background: '#f8fafc', borderRadius: 10, color: '#0f172a', fontWeight: 700, fontSize: 13, textDecoration: 'none', border: '1px solid #e2e8f0' }}>
-                Edit Questions
+                Tahrirlash
               </Link>
+              <a href={`/api/admin/reports/export-excel?examId=${exam.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 10, background: '#10b981', color: '#fff', textDecoration: 'none', boxShadow: '0 4px 10px rgba(16,185,129,0.2)' }} title="Excelga yuklash">
+                📊
+              </a>
               <button style={{ width: 40, height: 40, borderRadius: 10, border: '1px solid #fee2e2', background: '#fff1f1', color: '#ef4444', cursor: 'pointer' }}>
                 🗑️
               </button>
@@ -116,6 +121,18 @@ export default function AdminExamsPage() {
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>Time (Min)</label>
                   <input type="number" value={timeLimit} onChange={e => setTimeLimit(Number(e.target.value))} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', boxSizing: 'border-box' }} />
                 </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input 
+                  type="checkbox" 
+                  id="shuffle" 
+                  checked={shuffleQuestions} 
+                  onChange={e => setShuffleQuestions(e.target.checked)} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label htmlFor="shuffle" style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', cursor: 'pointer' }}>
+                  Savollarni aralashtirib berish (Shuffle)
+                </label>
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
                 <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>

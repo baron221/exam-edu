@@ -25,13 +25,14 @@ export default function ExamDetailPage() {
 
   // Single Question Form
   const [qText, setQText] = useState('');
+  const [qTextRu, setQTextRu] = useState('');
   const [qType, setQType] = useState('MCQ');
   const [points, setPoints] = useState(1);
   const [options, setOptions] = useState([
-    { text: '', isCorrect: true },
-    { text: '', isCorrect: false },
-    { text: '', isCorrect: false },
-    { text: '', isCorrect: false },
+    { text: '', textRu: '', isCorrect: true },
+    { text: '', textRu: '', isCorrect: false },
+    { text: '', textRu: '', isCorrect: false },
+    { text: '', textRu: '', isCorrect: false },
   ]);
   const [starterCode, setStarterCode] = useState('');
   const [language, setLanguage] = useState('cpp');
@@ -83,6 +84,7 @@ export default function ExamDetailPage() {
       method: 'POST',
       body: JSON.stringify({
         text: qText,
+        textRu: qTextRu,
         type: qType,
         points,
         options: qType === 'MCQ' ? options.filter(o => o.text.trim()) : [],
@@ -94,6 +96,7 @@ export default function ExamDetailPage() {
       const newQ = await res.json();
       setExam({ ...exam, questions: [...exam.questions, newQ] });
       setQText('');
+      setQTextRu('');
       setStarterCode('');
       toast.success('Question added to database');
     } else {
@@ -284,26 +287,40 @@ export default function ExamDetailPage() {
 
           <form onSubmit={handleAddQuestion}>
             <div className={styles.formField}>
-              <label className={styles.label}>{t('question_content')}</label>
-              <textarea required value={qText} onChange={e => setQText(e.target.value)} rows={4} className={styles.inputArea} placeholder="..." />
+              <label className={styles.label}>{t('question_content')} (UZ)</label>
+              <textarea required value={qText} onChange={e => setQText(e.target.value)} rows={3} className={styles.inputArea} placeholder="O'zbek matni..." />
+            </div>
+            
+            <div className={styles.formField} style={{ marginTop: '-8px' }}>
+              <label className={styles.label} style={{ color: '#94a3b8' }}>Savol Matni (RU) - Ixtiyoriy</label>
+              <textarea value={qTextRu} onChange={e => setQTextRu(e.target.value)} rows={3} className={styles.inputArea} placeholder="Русский текст..." style={{ border: '1px dashed #e2e8f0' }} />
             </div>
             
             {qType === 'MCQ' ? (
               <div className={styles.formField}>
                 <label className={styles.label}>{t('option_pool')}</label>
                 {options.map((opt, idx) => (
-                  <div key={idx} className={styles.optionInputGroup}>
-                    <input type="text" value={opt.text} onChange={e => {
+                  <div key={idx} className={styles.optionInputGroup} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" value={opt.text} onChange={e => {
+                        const newOpts = [...options];
+                        newOpts[idx].text = e.target.value;
+                        setOptions(newOpts);
+                      }} placeholder={`Variant ${idx + 1} (UZ)`} className={styles.inputText} />
+                      
+                      <button type="button" onClick={() => {
+                        const newOpts = options.map((o, i) => ({ ...o, isCorrect: i === idx }));
+                        setOptions(newOpts);
+                      }} className={`${styles.checkBtn} ${opt.isCorrect ? styles.active : ''}`}>
+                        <CheckCircle2 size={18} />
+                      </button>
+                    </div>
+                    
+                    <input type="text" value={opt.textRu} onChange={e => {
                       const newOpts = [...options];
-                      newOpts[idx].text = e.target.value;
+                      newOpts[idx].textRu = e.target.value;
                       setOptions(newOpts);
-                    }} placeholder={`Option ${idx + 1}`} className={styles.inputText} />
-                    <button type="button" onClick={() => {
-                      const newOpts = options.map((o, i) => ({ ...o, isCorrect: i === idx }));
-                      setOptions(newOpts);
-                    }} className={`${styles.checkBtn} ${opt.isCorrect ? styles.active : ''}`}>
-                      <CheckCircle2 size={18} />
-                    </button>
+                    }} placeholder={`Вариант ${idx + 1} (RU) - ixtiyoriy`} className={styles.inputText} style={{ background: '#f8fafc', borderStyle: 'dashed' }} />
                   </div>
                 ))}
               </div>

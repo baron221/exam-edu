@@ -17,6 +17,7 @@ export default function LoginPage() {
   // Student Fields
   const [name, setName] = useState('');
   const [idCode, setIdCode] = useState('');
+  const [groupName, setGroupName] = useState('');
   
   // Teacher Fields
   const [email, setEmail] = useState('');
@@ -29,7 +30,7 @@ export default function LoginPage() {
     setLoading(true);
 
     if (role === 'student') {
-      const result = await signIn('dev-id', { redirect: false, name, idCode });
+      const result = await signIn('dev-id', { redirect: false, name, idCode, groupName });
       if (result?.error) alert(result.error);
       else router.push('/');
     } else {
@@ -160,12 +161,25 @@ export default function LoginPage() {
                 {/* Student ID */}
                 <div>
                   <label style={{ display: 'block', fontSize: 'clamp(9px, 0.75vw, 10px)', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
-                    {t('student_id')}
+                    STUDENT ID
                   </label>
                   <input
                     type="text" required value={idCode}
                     onChange={e => setIdCode(e.target.value)}
-                    placeholder={t('id_placeholder')}
+                    placeholder="Talabalar raqamingiz"
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Group */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 'clamp(9px, 0.75vw, 10px)', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
+                    GURUH
+                  </label>
+                  <input
+                    type="text" required value={groupName}
+                    onChange={e => setGroupName(e.target.value)}
+                    placeholder="Masalan: 921-GURUH"
                     style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none' }}
                   />
                 </div>

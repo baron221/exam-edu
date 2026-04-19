@@ -17,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const NAV = [
     { href: '/admin',          label: t('dashboard'),  icon: '📊' },
     { href: '/admin/exams',    label: t('exams'),       icon: '📝' },
+    { href: '/admin/appeals',  label: 'Appeals',        icon: '⚖️' },
     { href: '/admin/courses',  label: t('courses'),     icon: '📚' },
     { href: '/admin/students', label: t('students'),    icon: '👥' },
   ];

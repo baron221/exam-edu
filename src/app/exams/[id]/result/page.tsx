@@ -16,6 +16,11 @@ export default function ExamResultPage() {
     
     const [attempt, setAttempt] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    
+    // Appeal State
+    const [showAppeal, setShowAppeal] = useState(false);
+    const [appealMessage, setAppealMessage] = useState('');
+    const [submittingAppeal, setSubmittingAppeal] = useState(false);
 
     useEffect(() => {
         if (status === 'unauthenticated') router.push('/login');
@@ -33,6 +38,25 @@ export default function ExamResultPage() {
     );
 
     if (!attempt) return null;
+
+    const submitAppeal = async () => {
+        if (!appealMessage.trim()) return;
+        setSubmittingAppeal(true);
+        try {
+            const res = await fetch(`/api/attempts/${attempt.id}/appeal`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: appealMessage })
+            });
+            if (res.ok) {
+                setAttempt({ ...attempt, isAppealed: true, appealStatus: 'PENDING', appealMessage });
+                setShowAppeal(false);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        setSubmittingAppeal(false);
+    };
 
     const pct = attempt.score;
 
@@ -95,6 +119,26 @@ export default function ExamResultPage() {
                     </div>
                 </div>
 
+                {/* Appeals Section */}
+                {attempt.isAppealed ? (
+                    <div style={{ padding: '16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24, textAlign: 'left' }}>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
+                            Appelyatsiya holati: <span style={{ color: attempt.appealStatus === 'APPROVED' ? '#10b981' : attempt.appealStatus === 'REJECTED' ? '#ef4444' : '#f59e0b'}}>{attempt.appealStatus}</span>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#475569', margin: '0 0 8px 0', fontStyle: 'italic' }}>"{attempt.appealMessage}"</p>
+                        {attempt.appealFeedback && (
+                            <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: 8 }}>
+                                <div style={{ fontSize: 10, fontWeight: 800, color: '#6366f1', textTransform: 'uppercase' }}>O'qituvchi javobi:</div>
+                                <p style={{ fontSize: 13, color: '#334155', margin: '4px 0 0 0', fontWeight: 600 }}>{attempt.appealFeedback}</p>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <button onClick={() => setShowAppeal(true)} style={{ display: 'block', width: '100%', padding: '12px', borderRadius: 12, background: '#fff', border: '1.5px solid #e2e8f0', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 24 }}>
+                        Natijaga e'tiroz bildirish (Appelyatsiya)
+                    </button>
+                )}
+
                 {/* CTA */}
                 <Link href="/" style={{
                     display: 'block', padding: '15px 24px', borderRadius: 14,
@@ -108,6 +152,29 @@ export default function ExamResultPage() {
                     {t('protocol_verified')}
                 </p>
             </div>
+
+            {/* Appeal Modal */}
+            {showAppeal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
+                    <div style={{ background: '#fff', borderRadius: 24, padding: 32, width: '100%', maxWidth: 400, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+                        <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>Appelyatsiya yuborish</h3>
+                        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 20, lineHeight: 1.5 }}>Agar baholashda nohaqlik yoki xatolik bor dеsangiz, asosli sababingizni yozib koldiring. O'qituvchi ishingizni qayta korib chiqadi.</p>
+                        <textarea 
+                            value={appealMessage} 
+                            onChange={e => setAppealMessage(e.target.value)}
+                            placeholder="Sababni yozing..."
+                            rows={4}
+                            style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1.5px solid #e2e8f0', marginBottom: 20, fontFamily: 'inherit', fontSize: 14 }}
+                        />
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button onClick={() => setShowAppeal(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>Bekor qilish</button>
+                            <button onClick={submitAppeal} disabled={submittingAppeal} style={{ flex: 1, padding: '12px', borderRadius: 12, background: '#6366f1', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                                {submittingAppeal ? 'Yuborilmoqda...' : 'Yuborish'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
