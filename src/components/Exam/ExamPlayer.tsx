@@ -75,7 +75,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
             lastCout = coutMatch[1].replace(/\\n/g, '');
         }
         
-        const cinMatch = stmt.match(/(?:std::)?cin\s*((>>\s*[a-zA-Z0-9_\[\]\.\->]+\s*)+)/);
+        const cinMatch = stmt.match(/(?:std::)?cin\s*(>>.*)/);
         if (cinMatch) {
             const varsCount = (cinMatch[1].match(/>>/g) || []).length;
             for (let i=0; i<varsCount; i++) {
