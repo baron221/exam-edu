@@ -64,9 +64,16 @@ export default function ExamPlayer({ examId }: { examId: string }) {
            return;
         }
 
-        setExam(examData);
-        // Robust attempt search: ensure it is an array before accessing first element
-        if (Array.isArray(examData.attempts) && examData.attempts.length > 0) {
+        // If no attempt exists, start a new one automatically
+        if (!examData.attempts || examData.attempts.length === 0) {
+          const startRes = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
+          const startData = await startRes.json();
+          if (startData.error) throw new Error(startData.error);
+          
+          setExam(startData);
+          setAttempt(startData.attempts[0]);
+        } else {
+          setExam(examData);
           setAttempt(examData.attempts[0]);
         }
         
