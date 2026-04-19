@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import MonacoEditor from '@monaco-editor/react';
+import CodeMirror from '@uiw/react-codemirror';
+import { cpp } from '@codemirror/lang-cpp';
+import { oneDark } from '@codemirror/theme-one-dark';
 import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save } from 'lucide-react';
 import styles from './ExamPlayer.module.css';
 import { useTranslation } from '@/i18n/translations';
@@ -236,18 +238,13 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                 
                 <div className={styles.workspace}>
                   <div className={styles.editorContainerContainer}>
-                    <MonacoEditor 
-                        theme="vs-dark"
+                    <CodeMirror 
                         value={answers[currentQ.id] || currentQ.starterCode || ''} 
-                        onChange={(val) => handleAnswer(currentQ.id, val || '')}
                         height="100%"
-                        options={{
-                            minimap: { enabled: false },
-                            fontSize: 14,
-                            lineNumbers: 'on',
-                            scrollBeyondLastLine: false,
-                            automaticLayout: true,
-                        }}
+                        theme={oneDark}
+                        extensions={[cpp()]}
+                        onChange={(val) => handleAnswer(currentQ.id, val)}
+                        className="h-full text-base"
                     />
                   </div>
                   <div className={styles.judgeResult}>
