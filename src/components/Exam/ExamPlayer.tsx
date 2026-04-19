@@ -50,15 +50,21 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   
-  // Terminal State
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [isPrompting, setIsPrompting] = useState(false);
+  const [activePrompt, setActivePrompt] = useState('> ');
   const [promptValue, setPromptValue] = useState('');
   const [judging, setJudging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
+
+  const extractPrompt = (code: string) => {
+    // Look for cout << "..." strings that appear before a cin or scanf
+    const match = code.match(/cout\s*<<\s*["']([^"']+)["'](?=[^]*?(cin|scanf))/);
+    return match ? match[1].replace(/\\n/g, '') : "Raqamni kiriting: ";
+  };
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -117,8 +123,10 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     setTerminalLines(["[System]: Compiling and preparing execution..."]);
     
     if (needsInput) {
+      const prompt = extractPrompt(sourceCode);
+      setActivePrompt(prompt);
       setIsPrompting(true);
-      setTerminalLines(prev => [...prev, "Raqamni kiriting: "]);
+      // We don't push the prompt line to history yet to avoid duplication
     } else {
       executeJudge(sourceCode, "");
     }
@@ -127,7 +135,8 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const handlePromptSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const input = promptValue;
-    setTerminalLines(prev => [...prev.slice(0, -1), `Raqamni kiriting: ${input}`]);
+    // Now push the completed prompt + input to history
+    setTerminalLines(prev => [...prev, `${activePrompt}${input}`]);
     setIsPrompting(false);
     setPromptValue('');
     
@@ -287,7 +296,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                         ))}
                         {isPrompting && (
                             <form onSubmit={handlePromptSubmit} className={styles.promptLine}>
-                                <span>Raqamni kiriting: </span>
+                                <span>{activePrompt}</span>
                                 <input 
                                     ref={promptInputRef}
                                     type="text" 
