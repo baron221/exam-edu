@@ -6,21 +6,40 @@ import Image from 'next/image';
 import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Timer as TimerIcon, 
-  Play, 
-  Terminal as TerminalIcon,
-  Code2,
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
-import { Terminal } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import '@xterm/xterm/css/xterm.css';
+import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save, Terminal as TerminalIcon } from 'lucide-react';
 import styles from './ExamPlayer.module.css';
 import { useTranslation } from '@/i18n/translations';
+
+interface TimerProps {
+  initialSeconds: number;
+  onTimeUp: () => void;
+}
+
+const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
+  const [timeLeft, setTimeLeft] = useState(initialSeconds);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      onTimeUp();
+      return;
+    }
+    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft, onTimeUp]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
+      <TimerIcon className="text-indigo-600" size={18} />
+      <span className="font-mono font-bold text-indigo-700 text-lg">
+        {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+      </span>
+    </div>
+  );
+};
 
 export default function ExamPlayer({ examId }: { examId: string }) {
   const router = useRouter();
@@ -30,86 +49,39 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  
+  // Terminal State
+  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [isPrompting, setIsPrompting] = useState(false);
+  const [activePrompt, setActivePrompt] = useState('> ');
+  const [promptValue, setPromptValue] = useState('');
   const [judging, setJudging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  // Xterm Refs
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const termInstance = useRef<Terminal | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
   
-  // Interactive State
-  const isInputMode = useRef(false);
-  const inputBuffer = useRef('');
-  const resolveInput = useRef<((value: string) => void) | null>(null);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const promptInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize Terminal
+  const extractPrompt = (code: string) => {
+    const match = code.match(/cout\s*<<\s*["']([^"']+)["'](?=[^]*?(cin|scanf))/);
+    return match ? match[1].replace(/\\n/g, '') : "Raqamni kiriting: ";
+  };
+
   useEffect(() => {
-    if (!terminalRef.current || termInstance.current) return;
+    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [terminalLines]);
 
-    const term = new Terminal({
-      cursorBlink: true,
-      fontSize: 14,
-      fontFamily: '"JetBrains Mono", monospace',
-      theme: {
-        background: '#0f172a',
-        foreground: '#cbd5e1',
-        cursor: '#818cf8',
-        selectionBackground: 'rgba(129, 140, 248, 0.3)',
-      },
-      convertEol: true
-    });
-
-    const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(terminalRef.current);
-    fitAddon.fit();
-
-    term.writeln('\x1b[1;34m[System]\x1b[0m Terminal initialized. Welcome to NPUU Kernel.');
-    
-    // Handle Input Typing
-    term.onData((data) => {
-        if (!isInputMode.current) return;
-
-        if (data === '\r') { // Enter
-            term.write('\r\n');
-            const result = inputBuffer.current;
-            inputBuffer.current = '';
-            isInputMode.current = false;
-            resolveInput.current?.(result);
-        } else if (data === '\x7f') { // Backspace
-            if (inputBuffer.current.length > 0) {
-                inputBuffer.current = inputBuffer.current.slice(0, -1);
-                term.write('\b \b');
-            }
-        } else {
-            inputBuffer.current += data;
-            term.write(data);
-        }
-    });
-
-    termInstance.current = term;
-    fitAddonRef.current = fitAddon;
-
-    return () => {
-      term.dispose();
-      termInstance.current = null;
-    };
-  }, []);
-
-  // Handle Resize
   useEffect(() => {
-    const handleResize = () => fitAddonRef.current?.fit();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (isPrompting) {
+        promptInputRef.current?.focus();
+    }
+  }, [isPrompting]);
 
-  // Fetch Data
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await fetch(`/api/exams/${examId}`);
         const examData = await res.json();
+        
         if (examData.error) return;
 
         if (!examData.attempts || examData.attempts.length === 0) {
@@ -121,9 +93,11 @@ export default function ExamPlayer({ examId }: { examId: string }) {
           setExam(examData);
           setAttempt(examData.attempts[0]);
         }
-
+        
         const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
-        if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
+        if (savedAnswers) {
+          setAnswers(JSON.parse(savedAnswers));
+        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -139,59 +113,58 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     localStorage.setItem(`exam_answers_${examId}`, JSON.stringify(newAnswers));
   };
 
-  const requestInput = (prompt: string): Promise<string> => {
-    return new Promise((resolve) => {
-      termInstance.current?.write(`\x1b[1;33m${prompt}\x1b[0m `);
-      isInputMode.current = true;
-      resolveInput.current = resolve;
-    });
-  };
-
-  const runCode = async () => {
-    if (!termInstance.current) return;
+  const handleStartRun = () => {
     const currentQ = exam.questions[currentIndex];
     const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
-    
-    termInstance.current.clear();
-    termInstance.current.writeln('\x1b[1;32m[Compile]\x1b[0m g++ main.cpp -o main');
-    
-    // Smart Interactive Hint
-    let capturedStdin = "";
     const needsInput = /cin\s*>>|scanf|getline|std::cin/.test(sourceCode);
     
-    if (needsInput) {
-        const promptMatch = sourceCode.match(/cout\s*<<\s*["']([^"']+)["'](?=[^]*?(cin|scanf))/);
-        const promptText = promptMatch ? promptMatch[1].replace(/\\n/g, '') : "Enter input: ";
-        capturedStdin = await requestInput(promptText);
-    }
-
-    setJudging(true);
-    termInstance.current.writeln('\x1b[1;34m[System]\x1b[0m Executing kernel...');
+    setTerminalLines(["[System]: Compiling and preparing execution..."]);
     
+    if (needsInput) {
+      const promptText = extractPrompt(sourceCode);
+      setActivePrompt(promptText);
+      setIsPrompting(true);
+    } else {
+      executeJudge(sourceCode, "");
+    }
+  };
+
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const input = promptValue;
+    setTerminalLines(prev => [...prev, `${activePrompt}${input}`]);
+    setIsPrompting(false);
+    setPromptValue('');
+    
+    const currentQ = exam.questions[currentIndex];
+    const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
+    executeJudge(sourceCode, input);
+  };
+
+  const executeJudge = async (sourceCode: string, input: string) => {
+    setJudging(true);
+    setTerminalLines(prev => [...prev, "[System]: Executing kernel..."]);
     try {
       const response = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           source_code: sourceCode, 
-          stdin: capturedStdin + '\n',
-          language_id: currentQ.language === 'cpp' ? 105 : 71 
+          stdin: input + '\n',
+          language_id: (exam.questions[currentIndex] as any).language === 'cpp' ? 105 : 71 
         }),
       });
       const data = await response.json();
       
-      if (data.compile_output) {
-        termInstance.current.writeln('\x1b[1;31m[Build Error]\x1b[0m');
-        termInstance.current.writeln(atob(data.compile_output));
-      } else {
-        if (data.stdout) termInstance.current.writeln(atob(data.stdout));
-        if (data.stderr) termInstance.current.writeln(`\x1b[1;31m[Runtime Error]:\x1b[0m ${atob(data.stderr)}`);
-        if (!data.stdout && !data.stderr) termInstance.current.writeln('\x1b[1;30m(No output returned)\x1b[0m');
-      }
+      const newLines: string[] = [];
+      if (data.compile_output) newLines.push(`[Compile]: ${atob(data.compile_output)}`);
+      if (data.stdout) newLines.push(atob(data.stdout));
+      if (data.stderr) newLines.push(`[Error]: ${atob(data.stderr)}`);
+      if (!data.stdout && !data.stderr && !data.compile_output) newLines.push(t('exec_no_output'));
       
-      termInstance.current.writeln(`\r\n\x1b[1;32m[Finished]\x1b[0m Process exited with code ${data.status.id === 3 ? 0 : data.status.id}`);
+      setTerminalLines(prev => [...prev, ...newLines]);
     } catch (error) {
-      termInstance.current.writeln('\x1b[1;31m[Critical Error]\x1b[0m System failed to respond.');
+      setTerminalLines(prev => [...prev, "[System]: Execution failed."]);
     } finally {
       setJudging(false);
     }
@@ -217,7 +190,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   if (loading || !exam || !attempt) {
     return (
         <div className={styles.loadingOverlay}>
-            <div className={styles.loadingText}>Loading Workspace...</div>
+            <div className={styles.loadingText}>{t('authenticating')}</div>
         </div>
     );
   }
@@ -231,76 +204,98 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   return (
     <div className={styles.viewer}>
       <header className={styles.header}>
-        <div className={styles.title}>
-          <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
-            <Code2 size={14} className="text-white" />
-          </div>
-          {exam.title}
+        <div className="flex items-center gap-4">
+          <Image src="/logo_npuu.png" alt="Logo" width={32} height={32} />
+          <div className={styles.title}>{exam.title}</div>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-slate-400">
-            <TimerIcon size={14} />
-            <span className="font-mono font-bold text-slate-200">
-              {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
-            </span>
-          </div>
-          <button className={styles.submitBtn} onClick={() => submitExam()}>
-            Finalize Attempt
-          </button>
-        </div>
+        <Timer initialSeconds={secondsLeft} onTimeUp={() => submitExam(true)} />
+        <button className={styles.submitBtn} onClick={() => submitExam()}>
+          {t('finalize_submit')}
+        </button>
       </header>
 
       <div className={styles.main}>
         <aside className={styles.sidebar}>
-          <div className={styles.sidebarSection}>
-            <div className={styles.sectionTitle}>Examination Progress</div>
-            <div className={styles.questionNav}>
-              {exam.questions.map((q: any, idx: number) => (
-                <button 
-                  key={q.id} 
-                  className={`${styles.navBtn} ${currentIndex === idx ? styles.active : ''} ${answers[q.id] ? styles.answered : ''}`}
-                  onClick={() => { setCurrentIndex(idx); termInstance.current?.clear(); }}
-                >
-                  {idx + 1}
-                </button>
-              ))}
-            </div>
+          <div className={styles.sidebarTitle}>{t('assigned_portals')}</div>
+          <div className={styles.questionNav}>
+            {exam.questions.map((q: any, idx: number) => (
+              <button 
+                key={q.id} 
+                className={`${styles.navBtn} ${currentIndex === idx ? styles.active : ''} ${answers[q.id] ? styles.answered : ''}`}
+                onClick={() => { setCurrentIndex(idx); setTerminalLines([]); }}
+              >
+                {idx + 1}
+              </button>
+            ))}
           </div>
         </aside>
 
-        <section className={styles.workspaceWrapper}>
-          <div className={styles.questionHeader}>
+        <section className={styles.content}>
+          <div className={styles.questionCard}>
             <div className={styles.questionText}>{currentQ.text}</div>
-          </div>
 
-          <div className={styles.editorArea}>
-            <div className={styles.editorContainer}>
-              <div className={styles.panelHeader}>
-                <div className={styles.panelTitle}>Source Code (main.cpp)</div>
+            {currentQ.type === 'MCQ' ? (
+              <div className={styles.optionsList}>
+                {currentQ.options.map((opt: any, idx: number) => (
+                  <button 
+                    key={opt.id} 
+                    className={`${styles.optionBtn} ${answers[currentQ.id] === opt.id ? styles.selected : ''}`}
+                    onClick={() => handleAnswer(currentQ.id, opt.id)}
+                  >
+                    <div className={styles.optionLetter}>{String.fromCharCode(65 + idx)}</div>
+                    <div>{opt.text}</div>
+                  </button>
+                ))}
               </div>
-              <CodeMirror 
-                value={answers[currentQ.id] || currentQ.starterCode || ''} 
-                height="100%"
-                theme={oneDark}
-                extensions={[cpp()]}
-                onChange={(val) => handleAnswer(currentQ.id, val)}
-                className="flex-1"
-              />
-            </div>
-
-            <div className={styles.terminalContainer}>
-              <div className={styles.panelHeader}>
-                <div className={styles.panelTitle}>
-                  <TerminalIcon size={12} />
-                  Standard Terminal
+            ) : (
+              <div className={styles.codingArea}>
+                <div className={styles.editorHeader}>
+                  <div className="flex items-center gap-2 font-semibold text-slate-500 uppercase text-[10px] tracking-widest">
+                    <TerminalIcon size={12} />
+                    {t('kernel_terminal')}
+                  </div>
+                  <button className={styles.runBtn} onClick={handleStartRun} disabled={judging || isPrompting}>
+                    <Play size={14} className="mr-2" />
+                    {judging ? t('compiling') : t('verify_solution')}
+                  </button>
                 </div>
-                <button className={styles.runBtn} onClick={runCode} disabled={judging}>
-                  <Play size={10} className="mr-2" />
-                  {judging ? 'Compiling...' : 'Run Kernel'}
-                </button>
+                
+                <div className={styles.workspace}>
+                  <div className={styles.editorContainerContainer}>
+                    <CodeMirror 
+                        value={answers[currentQ.id] || currentQ.starterCode || ''} 
+                        height="100%"
+                        theme={oneDark}
+                        extensions={[cpp()]}
+                        onChange={(val) => handleAnswer(currentQ.id, val)}
+                        className="h-full text-base"
+                    />
+                  </div>
+                  <div className={styles.unifiedTerminal}>
+                    <div className={styles.panelLabel}>{t('custom_output')}</div>
+                    <div className={styles.terminalContainer}>
+                        {terminalLines.map((line, idx) => (
+                            <div key={idx} className={styles.terminalLine}>{line}</div>
+                        ))}
+                        {isPrompting && (
+                            <form onSubmit={handlePromptSubmit} className={styles.promptLine}>
+                                <span>{activePrompt}</span>
+                                <input 
+                                    ref={promptInputRef}
+                                    type="text" 
+                                    value={promptValue}
+                                    onChange={(e) => setPromptValue(e.target.value)}
+                                    className={styles.terminalInput}
+                                    autoFocus
+                                />
+                            </form>
+                        )}
+                        <div ref={terminalEndRef} />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div ref={terminalRef} className={styles.terminalInstance} />
-            </div>
+            )}
           </div>
         </section>
       </div>
@@ -309,19 +304,26 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         <button 
           className={styles.footerBtn}
           disabled={currentIndex === 0}
-          onClick={() => { setCurrentIndex(i => i - 1); termInstance.current?.clear(); }}
+          onClick={() => { setCurrentIndex(i => i - 1); setTerminalLines([]); }}
         >
-          <ChevronLeft size={16} /> Previous
+          <ChevronLeft size={20} />
+          {t('prevPortal')}
         </button>
-        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Question {currentIndex + 1} of {totalQuestions}
+
+        <div className={styles.sequenceContainer}>
+            <div className={styles.sequenceLabel}>{t('sequence')}</div>
+            <div className={styles.sequenceValue}>
+                {currentIndex + 1} <span className={styles.sequenceDivider}>/</span> {totalQuestions}
+            </div>
         </div>
+
         <button 
           className={styles.footerBtn}
           disabled={currentIndex === totalQuestions - 1}
-          onClick={() => { setCurrentIndex(i => i + 1); termInstance.current?.clear(); }}
+          onClick={() => { setCurrentIndex(i => i + 1); setTerminalLines([]); }}
         >
-          Next <ChevronRight size={16} />
+          {t('nextPortal')}
+          <ChevronRight size={20} />
         </button>
       </footer>
     </div>
