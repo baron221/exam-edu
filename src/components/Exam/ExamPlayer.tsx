@@ -53,53 +53,14 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   // Terminal State
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [isPrompting, setIsPrompting] = useState(false);
-  const [activePrompt, setActivePrompt] = useState('> ');
-  const [promptQueue, setPromptQueue] = useState<string[]>([]);
-  const [inputBuffer, setInputBuffer] = useState<string[]>([]);
-  const [promptValue, setPromptValue] = useState('');
+  const [stdinValue, setStdinValue] = useState('');
   const [judging, setJudging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
 
-  const getInteractiveFlow = (code: string) => {
-    const cleanCode = code.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '');
-    const statements = cleanCode.split(/;/);
-    const prompts: string[] = [];
-    let lastCout = "Ma'lumot kiriting: ";
-    
-    for (const stmt of statements) {
-        const coutMatch = stmt.match(/cout\s*<<\s*["']([^"']+)["']/);
-        if (coutMatch) {
-            lastCout = coutMatch[1].replace(/\\n/g, '');
-        }
-        
-        const cinMatch = stmt.match(/(?:std::)?cin\s*(>>.*)/);
-        if (cinMatch) {
-            const varsCount = (cinMatch[1].match(/>>/g) || []).length;
-            for (let i=0; i<varsCount; i++) {
-                prompts.push(lastCout);
-                lastCout = "Navbatdagi ma'lumot: "; 
-            }
-        }
-        
-        const scanfMatch = stmt.match(/scanf\s*\(\s*"([^"]+)"/);
-        if (scanfMatch) {
-            const varsCount = (scanfMatch[1].match(/%[difscl]/g) || []).length;
-            for (let i=0; i<varsCount; i++) {
-                prompts.push(lastCout);
-                lastCout = "Navbatdagi ma'lumot: "; 
-            }
-        }
-        
-        if (/getline\s*\(\s*(?:std::)?cin/.test(stmt)) {
-            prompts.push(lastCout);
-            lastCout = "Navbatdagi ma'lumot: "; 
-        }
-    }
-    return prompts;
-  };
+
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -153,41 +114,22 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
     
     setTerminalLines(["[System]: Compiling and preparing execution..."]);
+    setStdinValue('');
     
-    let prompts = getInteractiveFlow(sourceCode);
-    if (prompts.length === 0 && /(?:std::)?cin\s*>>|scanf|getline/.test(sourceCode)) {
-        prompts.push("Ma'lumot kiriting: ");
-    }
-    
-    if (prompts.length > 0) {
-      setPromptQueue(prompts);
-      setInputBuffer([]);
-      setActivePrompt(prompts[0]);
+    if (/(?:std::)?cin|scanf|getline/.test(sourceCode)) {
       setIsPrompting(true);
     } else {
       executeJudge(sourceCode, "");
     }
   };
 
-  const handlePromptSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const input = promptValue;
-    setTerminalLines(prev => [...prev, `${activePrompt}${input}`]);
+  const submitBatchInput = () => {
+    setIsPrompting(false);
+    setTerminalLines(prev => [...prev, `[System]: Input received. Executing with batch input...`]);
     
-    const newBuffer = [...inputBuffer, input];
-    setInputBuffer(newBuffer);
-    setPromptValue('');
-    
-    if (newBuffer.length < promptQueue.length) {
-       setActivePrompt(promptQueue[newBuffer.length]);
-       setIsPrompting(true);
-    } else {
-       setIsPrompting(false);
-       const finalStdin = newBuffer.join('\n');
-       const currentQ = exam.questions[currentIndex];
-       const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
-       executeJudge(sourceCode, finalStdin);
-    }
+    const currentQ = exam.questions[currentIndex];
+    const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
+    executeJudge(sourceCode, stdinValue);
   };
 
   const safeBase64Decode = (str: string) => {
@@ -222,10 +164,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
       if (data.compile_output) newLines.push(`[Compile]: ${safeBase64Decode(data.compile_output)}`);
       
       if (data.stdout) {
-          let outText = safeBase64Decode(data.stdout);
-          promptQueue.forEach(p => {
-              outText = outText.replace(p, '');
-          });
+          const outText = safeBase64Decode(data.stdout);
           newLines.push(outText.trimStart());
       }
       
@@ -348,17 +287,26 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                             <div key={idx} className={styles.terminalLine}>{line}</div>
                         ))}
                         {isPrompting && (
-                            <form onSubmit={handlePromptSubmit} className={styles.promptLine}>
-                                <span>{activePrompt}</span>
-                                <input 
-                                    ref={promptInputRef}
-                                    type="text" 
-                                    value={promptValue}
-                                    onChange={(e) => setPromptValue(e.target.value)}
-                                    className={styles.terminalInput}
-                                    autoFocus
+                            <div className={styles.batchInputBlock}>
+                                <label className={styles.batchInputLabel}>
+                                  Standart Kiritish (STDIN)
+                                  <span className={styles.batchInputHint}>
+                                    Dasturga kerakli barcha kiritiluvchi ma'lumotlarni yozing (qatorlar yozishda 'Enter' yoki 'Probel' ishlating)
+                                  </span>
+                                </label>
+                                <textarea
+                                  ref={promptInputRef as any}
+                                  value={stdinValue}
+                                  onChange={(e) => setStdinValue(e.target.value)}
+                                  className={styles.batchTextarea}
+                                  placeholder="Masalan: \n12\n5\n"
+                                  rows={5}
+                                  autoFocus
                                 />
-                            </form>
+                                <button type="button" onClick={submitBatchInput} className={styles.batchSubmitBtn}>
+                                    Ma'lumotlarni Yuborish (Ishga Tushirish)
+                                </button>
+                            </div>
                         )}
                         <div ref={terminalEndRef} />
                     </div>
