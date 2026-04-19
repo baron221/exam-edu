@@ -319,7 +319,8 @@ export function useTranslation() {
   const locale = (params?.locale as Locale) || 'uz';
 
   const t = (key: keyof typeof translations['uz']) => {
-    return translations[locale][key] || translations['uz'][key] || key;
+    const dict = translations[locale] || translations['uz'];
+    return (dict as any)[key] || (translations['uz'] as any)[key] || key;
   };
 
   return { t, locale };

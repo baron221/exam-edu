@@ -65,8 +65,8 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         }
 
         setExam(examData);
-        // The attempt data is bundled inside the exam response in this project's architecture
-        if (examData.attempts && examData.attempts.length > 0) {
+        // Robust attempt search: ensure it is an array before accessing first element
+        if (Array.isArray(examData.attempts) && examData.attempts.length > 0) {
           setAttempt(examData.attempts[0]);
         }
         
