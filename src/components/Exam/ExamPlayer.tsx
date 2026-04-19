@@ -54,13 +54,34 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [isPrompting, setIsPrompting] = useState(false);
   const [stdinValue, setStdinValue] = useState('');
+  const [expectedPrompts, setExpectedPrompts] = useState<string[]>([]);
   const [judging, setJudging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
 
-
+  const getPromptHints = (code: string) => {
+    const cleanCode = code.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '');
+    const statements = cleanCode.split(/;/);
+    const hints: string[] = [];
+    let lastCout = null;
+    
+    for (const stmt of statements) {
+        const coutMatch = stmt.match(/cout\s*<<\s*["']([^"']+)["']/);
+        if (coutMatch) {
+            lastCout = coutMatch[1].replace(/\\n/g, '');
+        }
+        
+        if (/(?:std::)?cin|scanf|getline/.test(stmt)) {
+            if (lastCout) {
+                hints.push(lastCout);
+                lastCout = null; // reset
+            }
+        }
+    }
+    return hints;
+  };
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -117,6 +138,8 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     setStdinValue('');
     
     if (/(?:std::)?cin|scanf|getline/.test(sourceCode)) {
+      const hints = getPromptHints(sourceCode);
+      setExpectedPrompts(hints);
       setIsPrompting(true);
     } else {
       executeJudge(sourceCode, "");
@@ -294,6 +317,14 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                                     Dasturga kerakli barcha kiritiluvchi ma'lumotlarni yozing (qatorlar yozishda 'Enter' yoki 'Probel' ishlating)
                                   </span>
                                 </label>
+                                {expectedPrompts.length > 0 && (
+                                    <div style={{ padding: '8px', backgroundColor: '#151521', border: '1px dashed #4f46e5', borderRadius: '4px', marginBottom: '8px' }}>
+                                        <div style={{fontSize: '0.75rem', color: '#8892b0', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Kompyuter quyidagi ma'lumotlarni kutmoqda:</div>
+                                        {expectedPrompts.map((p, i) => (
+                                            <div key={i} style={{color: '#fbbf24', fontSize: '0.85rem', fontFamily: 'monospace', paddingLeft: '8px', borderLeft: '2px solid #fbbf24', marginBottom: '4px'}}>{p} ________</div>
+                                        ))}
+                                    </div>
+                                )}
                                 <textarea
                                   ref={promptInputRef as any}
                                   value={stdinValue}
