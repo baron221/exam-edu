@@ -98,6 +98,14 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   };
 
   const runCode = async (sourceCode: string, input: string, language: string) => {
+    // Smart Hint: Check if code needs input but stdin is empty
+    const needsInput = /cin\s*>>|scanf|getline|std::cin/.test(sourceCode);
+    if (needsInput && !input.trim()) {
+      import('react-hot-toast').then(({ toast }) => {
+        toast.error(t('stdin_placeholder'), { duration: 4000 });
+      });
+    }
+
     setJudging(true);
     setJudgeResult(null);
     try {
@@ -106,7 +114,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           source_code: sourceCode, 
-          stdin: input, 
+          stdin: input + '\n', // Ensure trailing newline
           language_id: language === 'cpp' ? 105 : 71 
         }),
       });
@@ -260,7 +268,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                     </div>
 
                     <div className={styles.inputArea}>
-                      <div className={styles.panelLabel}>{t('custom_input')} (stdin)</div>
+                      <div className={styles.panelLabel}>{t('custom_input')}</div>
                       <div className={styles.inputWrapper}>
                          <span className={styles.terminalPrompt}>$</span>
                          <textarea 
