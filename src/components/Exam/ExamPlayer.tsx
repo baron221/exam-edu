@@ -141,30 +141,50 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     executeJudge(sourceCode, input);
   };
 
+  const safeBase64Decode = (str: string) => {
+    if (!str) return "";
+    try {
+      // Decode base64 to utf-8 safely in browser
+      return decodeURIComponent(escape(atob(str)));
+    } catch (error) {
+      return atob(str);
+    }
+  };
+
   const executeJudge = async (sourceCode: string, input: string) => {
     setJudging(true);
     setTerminalLines(prev => [...prev, "[System]: Executing kernel..."]);
     try {
+      // Safely check language, defaulting to C++ (105)
+      const isPython = (exam.questions[currentIndex] as any).language === 'python';
+      
       const response = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           source_code: sourceCode, 
           stdin: input + '\n',
-          language_id: (exam.questions[currentIndex] as any).language === 'cpp' ? 105 : 71 
+          language_id: isPython ? 71 : 105 
         }),
       });
       const data = await response.json();
       
       const newLines: string[] = [];
-      if (data.compile_output) newLines.push(`[Compile]: ${atob(data.compile_output)}`);
-      if (data.stdout) newLines.push(atob(data.stdout));
-      if (data.stderr) newLines.push(`[Error]: ${atob(data.stderr)}`);
+      if (data.compile_output) newLines.push(`[Compile]: ${safeBase64Decode(data.compile_output)}`);
+      
+      if (data.stdout) {
+          const outText = safeBase64Decode(data.stdout);
+          // Optional: strip duplicate prompt text if Judge0 outputs it
+          const cleanedOut = activePrompt && outText.startsWith(activePrompt) ? outText.slice(activePrompt.length).trimStart() : outText;
+          newLines.push(cleanedOut);
+      }
+      
+      if (data.stderr) newLines.push(`[Error]: ${safeBase64Decode(data.stderr)}`);
       if (!data.stdout && !data.stderr && !data.compile_output) newLines.push(t('exec_no_output'));
       
       setTerminalLines(prev => [...prev, ...newLines]);
     } catch (error) {
-      setTerminalLines(prev => [...prev, "[System]: Execution failed."]);
+      setTerminalLines(prev => [...prev, "[System]: Execution failed. Network or Server error."]);
     } finally {
       setJudging(false);
     }
