@@ -101,7 +101,7 @@ export default function AdminAppealsPage() {
                             <input 
                                 type="number" 
                                 value={newScore} 
-                                onChange={e => setNewScore(e.target.value)}
+                                onChange={e => setNewScore(e.target.value === '' ? '' : Number(e.target.value))}
                                 style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', boxSizing: 'border-box' }} 
                             />
                         </div>
