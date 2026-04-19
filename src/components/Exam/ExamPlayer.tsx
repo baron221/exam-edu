@@ -150,7 +150,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
       });
       const data = await response.json();
       
-      const newLines = [];
+      const newLines: string[] = [];
       if (data.compile_output) newLines.push(`[Compile]: ${atob(data.compile_output)}`);
       if (data.stdout) newLines.push(atob(data.stdout));
       if (data.stderr) newLines.push(`[Error]: ${atob(data.stderr)}`);
