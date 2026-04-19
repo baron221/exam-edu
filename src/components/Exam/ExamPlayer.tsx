@@ -97,7 +97,11 @@ export default function ExamPlayer({ examId }: { examId: string }) {
       const response = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCode, stdin: input, languageId: language === 'cpp' ? 105 : 71 }),
+        body: JSON.stringify({ 
+          source_code: sourceCode, 
+          stdin: input, 
+          language_id: language === 'cpp' ? 105 : 71 
+        }),
       });
       const data = await response.json();
       setJudgeResult(data);
