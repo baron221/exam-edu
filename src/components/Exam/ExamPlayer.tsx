@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save, Terminal as TerminalIcon } from 'lucide-react';
 import styles from './ExamPlayer.module.css';
 import { useTranslation } from '@/i18n/translations';
 
@@ -49,12 +49,27 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  
+  // Terminal State
+  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [isPrompting, setIsPrompting] = useState(false);
+  const [promptValue, setPromptValue] = useState('');
   const [judging, setJudging] = useState(false);
-  const [judgeResult, setJudgeResult] = useState<any>(null);
-  const [stdin, setStdin] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
+  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const promptInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch exam and attempt data
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [terminalLines]);
+
+  useEffect(() => {
+    if (isPrompting) {
+        promptInputRef.current?.focus();
+    }
+  }, [isPrompting]);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -66,12 +81,9 @@ export default function ExamPlayer({ examId }: { examId: string }) {
            return;
         }
 
-        // If no attempt exists, start a new one automatically
         if (!examData.attempts || examData.attempts.length === 0) {
           const startRes = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
           const startData = await startRes.json();
-          if (startData.error) throw new Error(startData.error);
-          
           setExam(startData);
           setAttempt(startData.attempts[0]);
         } else {
@@ -79,7 +91,6 @@ export default function ExamPlayer({ examId }: { examId: string }) {
           setAttempt(examData.attempts[0]);
         }
         
-        // Load saved answers
         const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
         if (savedAnswers) {
           setAnswers(JSON.parse(savedAnswers));
@@ -99,32 +110,55 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     localStorage.setItem(`exam_answers_${examId}`, JSON.stringify(newAnswers));
   };
 
-  const runCode = async (sourceCode: string, input: string, language: string) => {
-    // Smart Hint: Check if code needs input but stdin is empty
+  const handleStartRun = () => {
+    const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
     const needsInput = /cin\s*>>|scanf|getline|std::cin/.test(sourceCode);
-    if (needsInput && !input.trim()) {
-      import('react-hot-toast').then(({ toast }) => {
-        toast.error(t('stdin_placeholder'), { duration: 4000 });
-      });
+    
+    setTerminalLines(["[System]: Compiling and preparing execution..."]);
+    
+    if (needsInput) {
+      setIsPrompting(true);
+      setTerminalLines(prev => [...prev, "Raqamni kiriting: "]);
+    } else {
+      executeJudge(sourceCode, "");
     }
+  };
 
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const input = promptValue;
+    setTerminalLines(prev => [...prev.slice(0, -1), `Raqamni kiriting: ${input}`]);
+    setIsPrompting(false);
+    setPromptValue('');
+    
+    const sourceCode = answers[currentQ.id] || currentQ.starterCode || '';
+    executeJudge(sourceCode, input);
+  };
+
+  const executeJudge = async (sourceCode: string, input: string) => {
     setJudging(true);
-    setJudgeResult(null);
+    setTerminalLines(prev => [...prev, "[System]: Executing kernel..."]);
     try {
       const response = await fetch('/api/exams/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           source_code: sourceCode, 
-          stdin: input + '\n', // Ensure trailing newline
-          language_id: language === 'cpp' ? 105 : 71 
+          stdin: input + '\n',
+          language_id: (exam.questions[currentIndex] as any).language === 'cpp' ? 105 : 71 
         }),
       });
       const data = await response.json();
-      setJudgeResult(data);
+      
+      const newLines = [];
+      if (data.compile_output) newLines.push(`[Compile]: ${atob(data.compile_output)}`);
+      if (data.stdout) newLines.push(atob(data.stdout));
+      if (data.stderr) newLines.push(`[Error]: ${atob(data.stderr)}`);
+      if (!data.stdout && !data.stderr && !data.compile_output) newLines.push(t('exec_no_output'));
+      
+      setTerminalLines(prev => [...prev, ...newLines]);
     } catch (error) {
-      console.error('Judge error:', error);
-      setJudgeResult({ error: 'System error' });
+      setTerminalLines(prev => [...prev, "[System]: Execution failed."]);
     } finally {
       setJudging(false);
     }
@@ -140,15 +174,9 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
       });
-      
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      localStorage.removeItem(`exam_answers_${examId}`);
       router.push('/dashboard');
     } catch (error) {
       console.error('Submit error:', error);
-      alert('Error submitting exam: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -196,7 +224,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
               <button 
                 key={q.id} 
                 className={`${styles.navBtn} ${currentIndex === idx ? styles.active : ''} ${answers[q.id] ? styles.answered : ''}`}
-                onClick={() => { setCurrentIndex(idx); setJudgeResult(null); }}
+                onClick={() => { setCurrentIndex(idx); setTerminalLines([]); }}
               >
                 {idx + 1}
               </button>
@@ -226,12 +254,16 @@ export default function ExamPlayer({ examId }: { examId: string }) {
             ) : (
               <div className={styles.codingArea}>
                 <div className={styles.editorHeader}>
-                  <div className="font-semibold text-slate-500 uppercase text-[10px] tracking-widest">{t('kernel_terminal')}</div>
+                  <div className="flex items-center gap-2 font-semibold text-slate-500 uppercase text-[10px] tracking-widest">
+                    <TerminalIcon size={12} />
+                    {t('kernel_terminal')}
+                  </div>
                   <button 
                     className={styles.runBtn} 
-                    onClick={() => runCode(answers[currentQ.id] || currentQ.starterCode || '', stdin, currentQ.language || 'cpp')}
-                    disabled={judging}
+                    onClick={handleStartRun}
+                    disabled={judging || isPrompting}
                   >
+                    <Play size={14} className="mr-2" />
                     {judging ? t('compiling') : t('verify_solution')}
                   </button>
                 </div>
@@ -247,34 +279,26 @@ export default function ExamPlayer({ examId }: { examId: string }) {
                         className="h-full text-base"
                     />
                   </div>
-                  <div className={styles.judgeResult}>
-                    <div className={styles.outputArea}>
-                      <div className={styles.panelLabel}>{t('custom_output')}</div>
-                      <div className={styles.terminalOutput}>
-                        {judgeResult ? (
-                          <>
-                            {judgeResult.stdout && atob(judgeResult.stdout)}
-                            {judgeResult.stderr && atob(judgeResult.stderr)}
-                            {judgeResult.compile_output && atob(judgeResult.compile_output)}
-                            {!judgeResult.stdout && !judgeResult.stderr && !judgeResult.compile_output && t('exec_no_output')}
-                          </>
-                        ) : (
-                          <span className="opacity-50 italic">{t('waiting_for_execution')}</span>
+                  <div className={styles.unifiedTerminal}>
+                    <div className={styles.panelLabel}>{t('custom_output')}</div>
+                    <div className={styles.terminalContainer}>
+                        {terminalLines.map((line, idx) => (
+                            <div key={idx} className={styles.terminalLine}>{line}</div>
+                        ))}
+                        {isPrompting && (
+                            <form onSubmit={handlePromptSubmit} className={styles.promptLine}>
+                                <span>Raqamni kiriting: </span>
+                                <input 
+                                    ref={promptInputRef}
+                                    type="text" 
+                                    value={promptValue}
+                                    onChange={(e) => setPromptValue(e.target.value)}
+                                    className={styles.terminalInput}
+                                    autoFocus
+                                />
+                            </form>
                         )}
-                      </div>
-                    </div>
-
-                    <div className={styles.inputArea}>
-                      <div className={styles.panelLabel}>{t('custom_input')}</div>
-                      <div className={styles.inputWrapper}>
-                         <span className={styles.terminalPrompt}>$</span>
-                         <textarea 
-                           className={styles.terminalTextarea}
-                           placeholder={t('stdin_placeholder')}
-                           value={stdin}
-                           onChange={(e) => setStdin(e.target.value)}
-                         />
-                      </div>
+                        <div ref={terminalEndRef} />
                     </div>
                   </div>
                 </div>
@@ -288,7 +312,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         <button 
           className={styles.footerBtn}
           disabled={currentIndex === 0}
-          onClick={() => { setCurrentIndex(i => i - 1); setJudgeResult(null); }}
+          onClick={() => { setCurrentIndex(i => i - 1); setTerminalLines([]); }}
         >
           <ChevronLeft size={20} />
           {t('prevPortal')}
@@ -304,7 +328,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         <button 
           className={styles.footerBtn}
           disabled={currentIndex === totalQuestions - 1}
-          onClick={() => { setCurrentIndex(i => i + 1); setJudgeResult(null); }}
+          onClick={() => { setCurrentIndex(i => i + 1); setTerminalLines([]); }}
         >
           {t('nextPortal')}
           <ChevronRight size={20} />
