@@ -119,7 +119,7 @@ export default function ExamPlayer({ examId }: { examId: string }) {
           setAttempt(startData.attempts[0]);
         } else {
           setExam(examData);
-          setAttempt(startData.attempts[0]);
+          setAttempt(examData.attempts[0]);
         }
 
         const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
