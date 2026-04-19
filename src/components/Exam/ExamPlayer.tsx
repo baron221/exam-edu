@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
@@ -43,6 +44,8 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
 
 export default function ExamPlayer({ examId }: { examId: string }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = (session?.user as any)?.id;
   const { t } = useTranslation();
   const [exam, setExam] = useState<any>(null);
   const [attempt, setAttempt] = useState<any>(null);
@@ -94,26 +97,38 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   }, [isPrompting]);
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
-        const res = await fetch(`/api/exams/${examId}`);
+        const res = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
         const examData = await res.json();
         
-        if (examData.error) return;
-
-        if (!examData.attempts || examData.attempts.length === 0) {
-          const startRes = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
-          const startData = await startRes.json();
-          setExam(startData);
-          setAttempt(startData.attempts[0]);
+        if (examData.error) {
+          router.push('/');
+          return;
         } else {
           setExam(examData);
-          setAttempt(examData.attempts[0]);
-        }
-        
-        const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
-        if (savedAnswers) {
-          setAnswers(JSON.parse(savedAnswers));
+          const att = examData.attempts[0];
+          setAttempt(att);
+
+          // Restore answers: Priority 1 - Database
+          const initialAnswers: Record<string, string> = {};
+          if (att?.responses) {
+            att.responses.forEach((r: any) => {
+              initialAnswers[r.questionId] = r.answer || "";
+            });
+          }
+
+          // Restore answers: Priority 2 - User-specific LocalStorage (for unsaved session data)
+          if (userId) {
+            const cacheKey = `exam_${examId}_user_${userId}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              Object.assign(initialAnswers, parsed);
+            }
+          }
+
+          setAnswers(initialAnswers);
         }
       } catch (error) {
         console.error(error);
@@ -121,13 +136,15 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         setLoading(false);
       }
     }
-    fetchData();
-  }, [examId]);
+    if (userId) fetchData();
+  }, [examId, userId, router]);
 
   const handleAnswer = (questionId: string, value: string) => {
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
-    localStorage.setItem(`exam_answers_${examId}`, JSON.stringify(newAnswers));
+    if (userId) {
+      localStorage.setItem(`exam_${examId}_user_${userId}`, JSON.stringify(newAnswers));
+    }
   };
 
   const handleStartRun = () => {
@@ -211,6 +228,12 @@ export default function ExamPlayer({ examId }: { examId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
       });
+      
+      // Clear user-specific cache on successful submission
+      if (userId) {
+        localStorage.removeItem(`exam_${examId}_user_${userId}`);
+      }
+
       router.push(`/exams/${examId}/result`);
     } catch (error) {
       console.error(error);

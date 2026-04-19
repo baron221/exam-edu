@@ -34,7 +34,10 @@ export async function POST(
         status: "IN_PROGRESS",
         startTime: new Date(),
       },
-      include: { user: { select: { language: true } } }
+      include: { 
+        user: { select: { language: true } },
+        responses: true 
+      }
     });
 
     const exam = await prisma.exam.findUnique({
