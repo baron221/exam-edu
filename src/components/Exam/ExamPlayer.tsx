@@ -204,8 +204,20 @@ export default function ExamPlayer({ examId }: { examId: string }) {
       if (data.compile_output) newLines.push(`[Compile]: ${safeBase64Decode(data.compile_output)}`);
       
       if (data.stdout) {
-          const outText = safeBase64Decode(data.stdout);
-          newLines.push(outText.trimStart());
+          let outText = safeBase64Decode(data.stdout);
+          
+          // Filter out strings that were used as input prompts to keep the terminal output clean
+          if (expectedPrompts.length > 0) {
+            expectedPrompts.forEach(prompt => {
+                // Remove the prompt string from the output if it exists at the start or is identical
+                // Note: We use a simple replace here which works for the sequential stdout in Judge0
+                outText = outText.replace(prompt, "");
+            });
+          }
+          
+          if (outText.trim()) {
+            newLines.push(outText.trimStart());
+          }
       }
       
       if (data.stderr) newLines.push(`[Error]: ${safeBase64Decode(data.stderr)}`);
