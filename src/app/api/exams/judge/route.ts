@@ -11,7 +11,15 @@ export async function POST(request: NextRequest) {
 
     const { source_code, language_id = 105, stdin = "" } = await request.json();
 
-    if (!process.env.JUDGE0_API_KEY) {
+    const isSelfHosted = process.env.JUDGE0_USE_SELF_HOSTED === "true";
+    const selfHostedUrl = process.env.JUDGE0_URL;
+    const apiKey = process.env.JUDGE0_API_KEY;
+
+    const baseUrl = isSelfHosted 
+      ? selfHostedUrl 
+      : "https://judge0-ce.p.rapidapi.com";
+
+    if (!isSelfHosted && !apiKey) {
       return NextResponse.json({ 
         error: "Judge0 API Key missing.",
         status: { id: 6, description: "Compilation Error" } 
@@ -24,13 +32,20 @@ export async function POST(request: NextRequest) {
     const b64_source = Buffer.from(source_code, 'utf8').toString('base64');
     const b64_stdin = Buffer.from(cleanStdin, 'utf8').toString('base64');
 
-    const response = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=true", {
+    const url = `${baseUrl}/submissions?base64_encoded=true&wait=true`;
+    
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (!isSelfHosted) {
+      headers["x-rapidapi-key"] = apiKey as string;
+      headers["x-rapidapi-host"] = "judge0-ce.p.rapidapi.com";
+    }
+
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "x-rapidapi-key": process.env.JUDGE0_API_KEY,
-        "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({ 
         source_code: b64_source, 
         language_id, 
