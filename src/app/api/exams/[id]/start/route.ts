@@ -153,14 +153,22 @@ export async function POST(
         }))
       });
     } else {
-      // Return existing question set based on created responses
-      const responseQuestionIds = existingAttempt.responses.map(r => r.questionId);
-      selectedQuestions = exam.questions.filter(q => responseQuestionIds.includes(q.id));
-      
-      // Sort to match the order of created responses to maintain the same sequence for the student
-      selectedQuestions.sort((a, b) => {
-        return responseQuestionIds.indexOf(a.id) - responseQuestionIds.indexOf(b.id);
-      });
+      // If we have a variant, strictly use the variant's questions regardless of existing responses
+      if (attempt.variantId) {
+        const selectedVariant = exam.variants.find(v => v.id === attempt.variantId);
+        if (selectedVariant) {
+          selectedQuestions = selectedVariant.questions.map(vq => vq.question);
+        }
+      } else {
+        // Return existing question set based on created responses (fallback for non-variant exams)
+        const responseQuestionIds = existingAttempt.responses.map(r => r.questionId);
+        selectedQuestions = exam.questions.filter(q => responseQuestionIds.includes(q.id));
+        
+        // Sort to match the order of created responses to maintain the same sequence for the student
+        selectedQuestions.sort((a, b) => {
+          return responseQuestionIds.indexOf(a.id) - responseQuestionIds.indexOf(b.id);
+        });
+      }
     }
 
     return NextResponse.json({ 
