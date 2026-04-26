@@ -23,7 +23,7 @@ export async function GET(
       name: true,
       email: true,
       studentId: true,
-      group: true,
+      groupName: true,
       attempts: {
         include: {
           exam: {

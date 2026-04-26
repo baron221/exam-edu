@@ -20,7 +20,7 @@ export default function AdminStudentsPage() {
   const filtered = students.filter(s => 
     s.name?.toLowerCase().includes(search.toLowerCase()) || 
     s.email?.toLowerCase().includes(search.toLowerCase()) ||
-    s.group?.toLowerCase().includes(search.toLowerCase())
+    s.groupName?.toLowerCase().includes(search.toLowerCase())
   );
 
   if (loading) return (
@@ -85,7 +85,7 @@ export default function AdminStudentsPage() {
                     </div>
                     <div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>{student.name}</div>
-                      <div style={{ fontSize: 11, color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', marginTop: 2 }}>{student.group || 'Individual'}</div>
+                      <div style={{ fontSize: 11, color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', marginTop: 2 }}>{student.groupName || 'Individual'}</div>
                     </div>
                   </div>
                 </td>

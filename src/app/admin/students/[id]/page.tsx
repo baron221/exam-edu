@@ -64,7 +64,7 @@ export default function StudentDetailPage() {
                   <Mail size={16} /> {student.email}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#64748b', fontSize: 14, fontWeight: 600 }}>
-                  <GraduationCap size={16} /> {student.group || 'N/A'}
+                  <GraduationCap size={16} /> {student.groupName || 'N/A'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#64748b', fontSize: 14, fontWeight: 600 }}>
                   <BarChart3 size={16} /> ID: {student.studentId || 'N/A'}

@@ -15,7 +15,7 @@ export async function GET() {
     where: { role: 'student' },
     orderBy: { name: 'asc' },
     select: {
-      id: true, name: true, email: true,
+      id: true, name: true, email: true, groupName: true,
       attempts: {
         where: { submittedAt: { not: null } },
         select: { score: true, submittedAt: true, exam: { select: { title: true } } },
