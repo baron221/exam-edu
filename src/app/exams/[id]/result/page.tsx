@@ -97,71 +97,29 @@ export default function ExamResultPage() {
                     </span>
                 </div>
 
-                <h1 style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-                    {t('process_complete')}
+                <h1 style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', margin: '0 0 16px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
+                    Jarayon yakunlandi!
                 </h1>
-                <p style={{ fontSize: 15, color: '#64748b', fontWeight: 500, margin: '0 0 32px' }}>
-                    {attempt.exam.title}
+                <p style={{ fontSize: 18, color: '#6366f1', fontWeight: 700, margin: '0 0 32px', lineHeight: 1.5 }}>
+                    Final Exam ga yaxshilab tayyorlaning, siz eng zo'risiz! 🚀
                 </p>
 
-                {/* Score */}
                 <div style={{
                     background: 'linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%)',
                     border: '1.5px solid rgba(99,102,241,0.15)',
-                    borderRadius: 20, padding: '36px 28px', marginBottom: 32,
+                    borderRadius: 24, padding: '40px 28px', marginBottom: 32,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16
                 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.25em', marginBottom: 12 }}>
-                        {t('verification_score')}
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                        <CheckCircle2 size={32} />
                     </div>
-                    <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1, background: 'linear-gradient(135deg, #6366f1, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                        {attempt.score}
-                        <span style={{ fontSize: 22, fontWeight: 700, color: '#94a3b8', WebkitTextFillColor: '#94a3b8', marginLeft: 6 }}>{t('pts')}</span>
-                    </div>
-                </div>
-
-                {/* AI Analysis Section for Student */}
-                <div style={{ textAlign: 'left', marginBottom: 32 }}>
-                    <div style={{ fontSize: 10, fontWeight: 850, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#6366f1', opacity: 0.2 }} />
-                        Savollar bo'yicha AI Tahlili
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {attempt.responses?.map((resp: any, idx: number) => (
-                            <div key={resp.id} style={{ background: '#f8faff', padding: 16, borderRadius: 16, border: '1px solid rgba(99,102,241,0.08)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                                    <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>#{idx + 1} Savol</div>
-                                    <div style={{ fontSize: 11, fontWeight: 700, color: resp.isCorrect ? '#10b981' : '#ef4444' }}>
-                                        {resp.pointsEarned} ball
-                                    </div>
-                                </div>
-                                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, fontStyle: 'italic' }}>
-                                    {resp.feedback || "Tahlil kutilmoqda..."}
-                                </div>
-                            </div>
-                        ))}
+                    <div style={{ fontSize: 14, color: '#64748b', fontWeight: 600 }}>
+                        Sizning javoblaringiz muvaffaqiyatli qabul qilindi va tekshirish uchun yuborildi.
                     </div>
                 </div>
 
-                {/* Appeals Section */}
-                {attempt.isAppealed ? (
-                    <div style={{ padding: '16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24, textAlign: 'left' }}>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
-                            Appelyatsiya holati: <span style={{ color: attempt.appealStatus === 'APPROVED' ? '#10b981' : attempt.appealStatus === 'REJECTED' ? '#ef4444' : '#f59e0b'}}>{attempt.appealStatus}</span>
-                        </div>
-                        <p style={{ fontSize: 13, color: '#475569', margin: '0 0 8px 0', fontStyle: 'italic' }}>"{attempt.appealMessage}"</p>
-                        {attempt.appealFeedback && (
-                            <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: 8 }}>
-                                <div style={{ fontSize: 10, fontWeight: 800, color: '#6366f1', textTransform: 'uppercase' }}>O'qituvchi javobi:</div>
-                                <p style={{ fontSize: 13, color: '#334155', margin: '4px 0 0 0', fontWeight: 600 }}>{attempt.appealFeedback}</p>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <button onClick={() => setShowAppeal(true)} style={{ display: 'block', width: '100%', padding: '12px', borderRadius: 12, background: '#fff', border: '1.5px solid #e2e8f0', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 24 }}>
-                        Natijaga e'tiroz bildirish (Appelyatsiya)
-                    </button>
-                )}
-
+                {/* Appeals Section Hidden or Modified if needed, but keeping Dashboard button */}
+                
                 {/* CTA */}
                 <Link href="/" style={{
                     display: 'block', padding: '15px 24px', borderRadius: 14,
@@ -169,7 +127,7 @@ export default function ExamResultPage() {
                     color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none',
                     boxShadow: '0 8px 24px rgba(99,102,241,0.35)', marginBottom: 20,
                 }}>
-                    {t('return_dashboard')}
+                    Asosiy sahifaga qaytish
                 </Link>
                 <p style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.2em', margin: 0 }}>
                     {t('protocol_verified')}
