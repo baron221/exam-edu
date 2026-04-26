@@ -39,7 +39,23 @@ export async function POST(
     let totalScore = 0;
     const responses = [];
 
-    for (const q of attempt.exam.questions) {
+    // Determine which questions to evaluate: Variant questions or Global questions
+    let questionsToEvaluate = attempt.exam.questions;
+    if (attempt.variantId) {
+      const variant = await prisma.examVariant.findUnique({
+        where: { id: attempt.variantId },
+        include: {
+          questions: {
+            include: { question: { include: { options: true } } }
+          }
+        }
+      });
+      if (variant) {
+        questionsToEvaluate = variant.questions.map(vq => vq.question) as any;
+      }
+    }
+
+    for (const q of questionsToEvaluate) {
       const userAnswer = answers[q.id];
       let isCorrect = false;
       let pointsEarned = 0;
