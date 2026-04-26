@@ -186,7 +186,7 @@ export default function LoginPage() {
                       outline: 'none', appearance: 'none', cursor: 'pointer'
                     }}
                   >
-                    <option value="" disabled>GURUHNI TANLANGLANG</option>
+                    <option value="" disabled>GURUHNI TANLANG</option>
                     {['FIT-1', 'FIT-2', 'FIT-3', 'FIT-4', 'FIT-5', 'FIT-6', 'FM-1', 'FM-2', 'FM-3', 'FM-4', 'FM-5', 'FM-6'].map(g => (
                       <option key={g} value={g}>{g}</option>
                     ))}
