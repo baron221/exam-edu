@@ -53,6 +53,11 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   
+  // Variant selection state
+  const [requiresVariant, setRequiresVariant] = useState(false);
+  const [availableVariants, setAvailableVariants] = useState<any[]>([]);
+  const [selectingVariantId, setSelectingVariantId] = useState<string | null>(null);
+
   // Terminal State
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [isPrompting, setIsPrompting] = useState(false);
@@ -96,48 +101,67 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     }
   }, [isPrompting]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/api/exams/${examId}/start`, { method: 'POST' });
-        const examData = await res.json();
-        
-        if (examData.error) {
-          router.push('/');
-          return;
-        } else {
-          setExam(examData);
-          const att = examData.attempts[0];
-          setAttempt(att);
-
-          // Restore answers: Priority 1 - Database
-          const initialAnswers: Record<string, string> = {};
-          if (att?.responses) {
-            att.responses.forEach((r: any) => {
-              initialAnswers[r.questionId] = r.answer || "";
-            });
-          }
-
-          // Restore answers: Priority 2 - User-specific LocalStorage (for unsaved session data)
-          if (userId) {
-            const cacheKey = `exam_${examId}_user_${userId}`;
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-              const parsed = JSON.parse(cached);
-              Object.assign(initialAnswers, parsed);
-            }
-          }
-
-          setAnswers(initialAnswers);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+  const fetchData = async (vId?: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/exams/${examId}/start`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variantId: vId })
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        router.push('/');
+        return;
       }
+
+      if (data.requiresVariant) {
+        setRequiresVariant(true);
+        setAvailableVariants(data.variants);
+        setExam(data);
+        return;
+      }
+
+      setRequiresVariant(false);
+      setExam(data);
+      const att = data.attempts[0];
+      setAttempt(att);
+
+      // Restore answers: Priority 1 - Database
+      const initialAnswers: Record<string, string> = {};
+      if (att?.responses) {
+        att.responses.forEach((r: any) => {
+          initialAnswers[r.questionId] = r.answer || "";
+        });
+      }
+
+      // Restore answers: Priority 2 - User-specific LocalStorage (for unsaved session data)
+      if (userId) {
+        const cacheKey = `exam_${examId}_user_${userId}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          Object.assign(initialAnswers, parsed);
+        }
+      }
+
+      setAnswers(initialAnswers);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     if (userId) fetchData();
   }, [examId, userId, router]);
+
+  const handleVariantSelect = (vId: string) => {
+    setSelectingVariantId(vId);
+    fetchData(vId);
+  };
 
   const handleAnswer = (questionId: string, value: string) => {
     const newAnswers = { ...answers, [questionId]: value };
@@ -254,11 +278,47 @@ export default function ExamPlayer({ examId }: { examId: string }) {
     }
   };
 
-  if (loading || !exam || !attempt) {
+  if (loading || !exam || (!attempt && !requiresVariant)) {
     return (
         <div className={styles.loadingOverlay}>
             <div className={styles.loadingText}>{t('authenticating')}</div>
         </div>
+    );
+  }
+
+  if (requiresVariant) {
+    return (
+      <div className={styles.loadingOverlay} style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f4f0ff 100%)', display: 'flex', flexDirection: 'column', padding: '40px' }}>
+        <div style={{ maxWidth: 800, width: '100%', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <Image src="/logo_npuu.png" alt="Logo" width={64} height={64} style={{ margin: '0 auto 24px' }} />
+            <h1 style={{ fontSize: 32, fontWeight: 950, color: '#0f172a', marginBottom: 12 }}>Variantni tanlang</h1>
+            <p style={{ fontSize: 16, color: '#64748b', fontWeight: 500 }}>{exam.title} imtihoni uchun berilgan variantlardan birini tanlang. Har bir variant o'zining savollar to'plamiga ega.</p>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 24 }}>
+            {availableVariants.map((v: any) => (
+              <div 
+                key={v.id} 
+                onClick={() => handleVariantSelect(v.id)}
+                style={{ 
+                  background: '#fff', borderRadius: 24, padding: 32, border: '2px solid #e2e8f0', cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', overflow: 'hidden',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.02)', textAlign: 'center'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(99, 102, 241, 0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.02)'; }}
+              >
+                <div style={{ fontSize: 40, marginBottom: 16 }}>📄</div>
+                <h3 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginBottom: 8 }}>{v.name}</h3>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#6366f1', background: 'rgba(99, 102, 241, 0.08)', padding: '6px 12px', borderRadius: 12, display: 'inline-block' }}>
+                  {v.questionCount} ta savol
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -273,7 +333,14 @@ export default function ExamPlayer({ examId }: { examId: string }) {
       <header className={styles.header}>
         <div className="flex items-center gap-4">
           <Image src="/logo_npuu.png" alt="Logo" width={32} height={32} />
-          <div className={styles.title}>{exam.title}</div>
+          <div className={styles.title}>
+            {exam.title}
+            {exam.selectedVariant && (
+              <span style={{ marginLeft: 12, fontSize: 12, opacity: 0.6, fontWeight: 700, background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                {exam.selectedVariant.name}
+              </span>
+            )}
+          </div>
         </div>
         <Timer initialSeconds={secondsLeft} onTimeUp={() => submitExam(true)} />
         <button className={styles.submitBtn} onClick={() => submitExam()}>

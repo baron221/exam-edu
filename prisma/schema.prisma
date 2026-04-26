@@ -82,26 +82,28 @@ model Exam {
   course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
   attempts     ExamAttempt[]
   questions    ExamQuestion[]
+  variants     ExamVariant[]
 
   @@index([courseId])
 }
 
 model ExamQuestion {
-  id            String         @id @default(cuid())
-  examId        String
-  type          QuestionType   @default(MCQ)
-  text          String
-  textRu        String?
-  explanation   String?
-  explanationRu String?
-  order         Int            @default(0)
-  points        Int            @default(1)
-  language      String?        @default("cpp")
-  starterCode   String?
-  testCases     Json?
-  options       ExamOption[]
-  exam          Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  responses     ExamResponse[]
+  id               String                @id @default(cuid())
+  examId           String
+  type             QuestionType          @default(MCQ)
+  text             String
+  textRu           String?
+  explanation      String?
+  explanationRu    String?
+  order            Int                   @default(0)
+  points           Int                   @default(1)
+  language         String?               @default("cpp")
+  starterCode      String?
+  testCases        Json?
+  options          ExamOption[]
+  exam             Exam                  @relation(fields: [examId], references: [id], onDelete: Cascade)
+  responses        ExamResponse[]
+  variantQuestions ExamVariantQuestion[]
 
   @@index([examId])
 }
@@ -116,20 +118,22 @@ model ExamOption {
 }
 
 model ExamAttempt {
-  id             String         @id @default(cuid())
+  id             String       @id @default(cuid())
   examId         String
   userId         String
-  startTime      DateTime       @default(now())
+  variantId      String?
+  startTime      DateTime     @default(now())
   submittedAt    DateTime?
-  score          Float          @default(0)
-  status         String         @default("IN_PROGRESS")
-  warningCount   Int            @default(0)
-  isAppealed     Boolean        @default(false)
+  score          Float        @default(0)
+  status         String       @default("IN_PROGRESS")
+  warningCount   Int          @default(0)
+  isAppealed     Boolean      @default(false)
   appealMessage  String?
-  appealStatus   String?        // PENDING, APPROVED, REJECTED
+  appealStatus   String?      // PENDING, APPROVED, REJECTED
   appealFeedback String?
-  exam           Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam           Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant        ExamVariant? @relation(fields: [variantId], references: [id])
   responses      ExamResponse[]
 
   @@unique([userId, examId])
@@ -149,6 +153,29 @@ model ExamResponse {
   question     ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([attemptId])
+}
+
+model ExamVariant {
+  id        String                @id @default(cuid())
+  examId    String
+  name      String
+  createdAt DateTime              @default(now())
+  exam      Exam                  @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questions ExamVariantQuestion[]
+  attempts  ExamAttempt[]
+
+  @@index([examId])
+}
+
+model ExamVariantQuestion {
+  id         String       @id @default(cuid())
+  variantId  String
+  questionId String
+  order      Int          @default(0)
+  variant    ExamVariant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  question   ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, questionId])
 }
 
 enum ExamType {

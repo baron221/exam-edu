@@ -15,28 +15,58 @@ export async function POST(
 
     const { id: examId } = await params;
     const userId = (session.user as any).id;
+    const body = await request.json().catch(() => ({}));
+    const { variantId } = body;
 
     // Check for existing attempt and responses
     const existingAttempt = await prisma.examAttempt.findUnique({
       where: { userId_examId: { userId, examId } },
-      include: { responses: true, user: { select: { language: true } } }
+      include: { 
+        responses: true, 
+        user: { select: { language: true } },
+        variant: {
+          include: {
+            questions: {
+              include: { question: { include: { options: true } } },
+              orderBy: { order: 'asc' }
+            }
+          }
+        }
+      }
     });
+
+    // If already in progress and has a variant, return that
+    if (existingAttempt && existingAttempt.status === "IN_PROGRESS") {
+      if (existingAttempt.variantId) {
+        const variantQuestions = existingAttempt.variant.questions.map(vq => vq.question);
+        return NextResponse.json({
+          ...(await prisma.exam.findUnique({ where: { id: examId } })),
+          questions: variantQuestions,
+          attempts: [existingAttempt],
+          userLanguage: existingAttempt.user?.language || 'uz',
+          selectedVariant: existingAttempt.variant
+        });
+      }
+    }
 
     const attempt = await prisma.examAttempt.upsert({
       where: { userId_examId: { userId, examId } },
       update: {
         status: "IN_PROGRESS",
+        variantId: variantId || (existingAttempt?.variantId),
         startTime: existingAttempt?.status === "IN_PROGRESS" ? existingAttempt.startTime : new Date(),
       },
       create: {
         userId,
         examId,
+        variantId,
         status: "IN_PROGRESS",
         startTime: new Date(),
       },
       include: { 
         user: { select: { language: true } },
-        responses: true 
+        responses: true,
+        variant: true
       }
     });
 
@@ -46,16 +76,43 @@ export async function POST(
         questions: {
           include: { options: true },
         },
+        variants: {
+          include: {
+            questions: {
+              include: { question: { include: { options: true } } },
+              orderBy: { order: 'asc' }
+            }
+          }
+        }
       },
     });
 
     if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
 
+    // If student hasn't selected a variant but variants exist, return them so the UI can show a selector
+    if (!variantId && !attempt.variantId && exam.variants.length > 0) {
+      return NextResponse.json({
+        ...exam,
+        requiresVariant: true,
+        variants: exam.variants.map(v => ({ id: v.id, name: v.name, questionCount: v.questions.length })),
+        attempts: [attempt]
+      });
+    }
+
     let selectedQuestions = exam.questions;
 
-    // Only randomize if this is a fresh start (no responses yet)
+    // Use variant questions if a variant is selected
+    if (attempt.variantId) {
+      const selectedVariant = exam.variants.find(v => v.id === attempt.variantId);
+      if (selectedVariant) {
+        selectedQuestions = selectedVariant.questions.map(vq => vq.question);
+      }
+    }
+
+    // Only randomize if this is a fresh start (no responses yet) and NOT a variant-based exam
+    // (Variants have their own order)
     if (existingAttempt?.responses.length === 0 || !existingAttempt) {
-      if (exam.shuffleQuestions) {
+      if (!attempt.variantId && exam.shuffleQuestions) {
         // Fisher-Yates Shuffle
         for (let i = selectedQuestions.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -63,7 +120,7 @@ export async function POST(
         }
       }
 
-      if (exam.questionLimit && exam.questionLimit > 0) {
+      if (!attempt.variantId && exam.questionLimit && exam.questionLimit > 0) {
         selectedQuestions = selectedQuestions.slice(0, exam.questionLimit);
       }
 
@@ -90,7 +147,8 @@ export async function POST(
         ...exam, 
         questions: selectedQuestions, 
         attempts: [attempt],
-        userLanguage: attempt.user?.language || 'uz'
+        userLanguage: attempt.user?.language || 'uz',
+        selectedVariant: attempt.variant
     });
   } catch (error) {
     console.error("[EXAM_START]", error);
