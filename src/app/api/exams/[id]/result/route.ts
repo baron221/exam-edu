@@ -33,6 +33,23 @@ export async function GET(
             return new NextResponse('Not Found', { status: 404 });
         }
 
+        // Filter responses to match variant questions (prevents ghost questions from previous attempts)
+        if (attempt.variantId) {
+            const variant = await prisma.examVariant.findUnique({
+                where: { id: attempt.variantId },
+                include: { questions: { select: { questionId: true } } }
+            });
+            if (variant) {
+                const variantQuestionIds = variant.questions.map(vq => vq.questionId);
+                (attempt as any).responses = attempt.responses.filter(r => variantQuestionIds.includes(r.questionId));
+                
+                // Sort responses to match variant order
+                (attempt as any).responses.sort((a: any, b: any) => {
+                    return variantQuestionIds.indexOf(a.questionId) - variantQuestionIds.indexOf(b.questionId);
+                });
+            }
+        }
+
         return NextResponse.json(attempt);
     } catch (error) {
         console.error('Error fetching result:', error);
