@@ -366,15 +366,16 @@ export default function ExamDetailPage() {
                       </button>
                     </div>
                     <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 12 }}>{v.name}</h3>
-                    <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
+                    <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 12 }}>
                       <FileStack size={12} style={{ marginBottom: -2, marginRight: 4 }} />
                       {v.questions.length} ta savol
                     </div>
-                    <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {v.questions.map((vq: any, qIdx: number) => (
-                        <span key={vq.id} style={{ padding: '2px 8px', background: '#f1f5f9', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>
-                          #{qIdx + 1}
-                        </span>
+                        <div key={vq.id} style={{ fontSize: 11, color: '#475569', background: '#f8fafc', padding: '6px 10px', borderRadius: 8, border: '1px solid #f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <span style={{ fontWeight: 800, color: '#6366f1', marginRight: 6 }}>#{qIdx + 1}</span>
+                          {vq.question?.text}
+                        </div>
                       ))}
                     </div>
                   </div>

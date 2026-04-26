@@ -35,17 +35,37 @@ export async function POST(
       }
     });
 
+    // LOCK: If responses already exist, student cannot change variant
+    const isLocked = existingAttempt && existingAttempt.responses.length > 0;
+    const finalVariantId = isLocked ? existingAttempt.variantId : (variantId || existingAttempt?.variantId);
+
     // If already in progress and has a variant, return that
     if (existingAttempt && existingAttempt.status === "IN_PROGRESS") {
-      if (existingAttempt.variantId) {
-        const variantQuestions = existingAttempt.variant.questions.map(vq => vq.question);
-        return NextResponse.json({
-          ...(await prisma.exam.findUnique({ where: { id: examId } })),
-          questions: variantQuestions,
-          attempts: [existingAttempt],
-          userLanguage: existingAttempt.user?.language || 'uz',
-          selectedVariant: existingAttempt.variant
-        });
+      if (finalVariantId) {
+        // Fetch the variant with questions if not already in existingAttempt
+        let variantData = existingAttempt.variant;
+        if (!variantData || variantData.id !== finalVariantId) {
+           variantData = await prisma.examVariant.findUnique({
+             where: { id: finalVariantId as string },
+             include: {
+               questions: {
+                 include: { question: { include: { options: true } } },
+                 orderBy: { order: 'asc' }
+               }
+             }
+           }) as any;
+        }
+
+        if (variantData) {
+          const variantQuestions = variantData.questions.map(vq => vq.question);
+          return NextResponse.json({
+            ...(await prisma.exam.findUnique({ where: { id: examId } })),
+            questions: variantQuestions,
+            attempts: [existingAttempt],
+            userLanguage: existingAttempt.user?.language || 'uz',
+            selectedVariant: variantData
+          });
+        }
       }
     }
 
@@ -53,7 +73,7 @@ export async function POST(
       where: { userId_examId: { userId, examId } },
       update: {
         status: "IN_PROGRESS",
-        variantId: variantId || (existingAttempt?.variantId),
+        variantId: finalVariantId,
         startTime: existingAttempt?.status === "IN_PROGRESS" ? existingAttempt.startTime : new Date(),
       },
       create: {
