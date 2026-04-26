@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { evaluateCode } from "@/lib/judge";
+import { evaluateCodeWithAI } from "@/lib/ai";
 
 export async function POST(
   request: NextRequest,
@@ -52,18 +53,34 @@ export async function POST(
         }
       } else if (q.type === "CODING") {
         const testCases = q.testCases as any[];
+        const sourceCode = String(userAnswer || "");
+        
         if (testCases && testCases.length > 0) {
           try {
-            const evalResult = await evaluateCode(String(userAnswer || ""), testCases);
-            pointsEarned = (evalResult.score / evalResult.total) * q.points;
-            isCorrect = evalResult.passed;
-            feedback = `Passed ${evalResult.score}/${evalResult.total} test cases.`;
+            // 1. Evaluate via Judge0 (Unit Tests)
+            const evalResult = await evaluateCode(sourceCode, testCases);
+            const judgeScoreRatio = evalResult.score / evalResult.total; // 0 to 1
+            
+            // 2. Evaluate via AI (Logic & Quality)
+            const testSummary = evalResult.results.map(r => 
+              `Input: ${r.input}, Expected: ${r.expected}, Actual: ${r.actual}, Status: ${r.status}`
+            ).join("\n");
+            
+            const aiResult = await evaluateCodeWithAI(sourceCode, q.text, testSummary);
+            const aiScoreRatio = aiResult.score / 100; // 0 to 1
+            
+            // 3. Weighted Score: 70% Unit Tests, 30% AI Logic
+            // This ensures students get points for effort/logic even if test cases fail slightly
+            const combinedRatio = (judgeScoreRatio * 0.7) + (aiScoreRatio * 0.3);
+            
+            pointsEarned = combinedRatio * q.points;
+            isCorrect = combinedRatio >= 0.6; // Passing threshold for a single question
+            feedback = `[UNIT TESTS]: ${evalResult.score}/${evalResult.total} o'tdi.\n[AI XULOSA]: ${aiResult.feedback}`;
           } catch (err: any) {
             console.error(`[EVAL_FAIL] Q:${q.id}`, err);
             feedback = "Evaluation engine error.";
           }
         } else {
-          // No test cases defined, default to 0 or manual review needed
           feedback = "No test cases defined for this unit.";
         }
       }
