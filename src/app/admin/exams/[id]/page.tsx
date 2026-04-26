@@ -42,7 +42,7 @@ export default function ExamDetailPage() {
     { text: '', textRu: '', isCorrect: false },
     { text: '', textRu: '', isCorrect: false },
   ]);
-  const [starterCode, setStarterCode] = useState('');
+  const [starterCode, setStarterCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    // Kodni bu yerga yozing\n    \n    return 0;\n}`);
   const [language, setLanguage] = useState('cpp');
   const [loadingAdd, setLoadingAdd] = useState(false);
 
@@ -116,7 +116,7 @@ export default function ExamDetailPage() {
       setExam({ ...exam, questions: [...exam.questions, newQ] });
       setQText('');
       setQTextRu('');
-      setStarterCode('');
+      setStarterCode(`#include <iostream>\nusing namespace std;\n\nint main() {\n    // Kodni bu yerga yozing\n    \n    return 0;\n}`);
       toast.success('Question added to database');
     } else {
       toast.error('Critical: Database injection failed');
