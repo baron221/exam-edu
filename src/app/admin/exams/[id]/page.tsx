@@ -468,7 +468,6 @@ export default function ExamDetailPage() {
             </div>
           </div>
         )}
-      </div></div>
       </div>
 
       {showBulkModal && (
