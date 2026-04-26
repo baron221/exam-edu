@@ -17,6 +17,7 @@ export default function AdminExamsPage() {
   const [timeLimit, setTimeLimit] = useState(60);
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +47,23 @@ export default function AdminExamsPage() {
       alert('Failed to create exam');
     }
     setLoadingCreate(false);
+  };
+
+  const handleDelete = async (examId: string, examTitle: string) => {
+    if (!confirm(`"${examTitle}" imtihonini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.`)) return;
+    setDeletingId(examId);
+    try {
+      const res = await fetch(`/api/admin/exams/${examId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setExams(prev => prev.filter(e => e.id !== examId));
+      } else {
+        alert('Imtihonni o\'chirishda xato yuz berdi.');
+      }
+    } catch {
+      alert('Tarmoq xatosi. Qayta urinib ko\'ring.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) return <div style={{ color: '#6366f1', fontWeight: 700 }}>Loading exams…</div>;
@@ -84,8 +102,21 @@ export default function AdminExamsPage() {
               <a href={`/api/admin/reports/export-excel?examId=${exam.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 10, background: '#10b981', color: '#fff', textDecoration: 'none', boxShadow: '0 4px 10px rgba(16,185,129,0.2)' }} title="Excelga yuklash">
                 📊
               </a>
-              <button style={{ width: 40, height: 40, borderRadius: 10, border: '1px solid #fee2e2', background: '#fff1f1', color: '#ef4444', cursor: 'pointer' }}>
-                🗑️
+              <button 
+                onClick={() => handleDelete(exam.id, exam.title)}
+                disabled={deletingId === exam.id}
+                title="Imtihonni o'chirish"
+                style={{ 
+                  width: 40, height: 40, borderRadius: 10, 
+                  border: '1px solid #fee2e2', 
+                  background: deletingId === exam.id ? '#f1f5f9' : '#fff1f1', 
+                  color: deletingId === exam.id ? '#94a3b8' : '#ef4444', 
+                  cursor: deletingId === exam.id ? 'not-allowed' : 'pointer',
+                  fontSize: 16,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {deletingId === exam.id ? '⏳' : '🗑️'}
               </button>
             </div>
           </div>
