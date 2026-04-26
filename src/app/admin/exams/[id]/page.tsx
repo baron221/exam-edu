@@ -655,17 +655,70 @@ export default function ExamDetailPage() {
                   <label className={styles.label}>Variant Nomi (masalan: Variant 1 yoki Bilet-5)</label>
                   <input required value={vName} onChange={e => setVName(e.target.value)} className={styles.inputText} placeholder="Variant nomini yozing..." />
                 </div>
+                <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  <input 
+                    type="text" 
+                    placeholder="Savollarni qidirish..." 
+                    className={styles.inputText}
+                    style={{ flex: 1, minWidth: 200, margin: 0 }}
+                    onChange={(e) => {
+                      const term = e.target.value.toLowerCase();
+                      const items = document.querySelectorAll('.question-selection-item');
+                      items.forEach((item: any) => {
+                        const text = item.getAttribute('data-text').toLowerCase();
+                        item.style.display = text.includes(term) ? 'flex' : 'none';
+                      });
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" onClick={() => setSelectedQuestionIds(exam.questions.map((q: any) => q.id))} className={styles.secondaryBtn} style={{ fontSize: 10, height: 38 }}>
+                      Hammasini tanlash
+                    </button>
+                    <button type="button" onClick={() => setSelectedQuestionIds([])} className={styles.secondaryBtn} style={{ fontSize: 10, height: 38, borderColor: '#fee2e2', color: '#ef4444' }}>
+                      Tozalash
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(99, 102, 241, 0.03)', borderRadius: 12, border: '1px solid rgba(99, 102, 241, 0.1)' }}>
+                  <Sparkles size={14} color="#6366f1" />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Tasodifiy tanlash:</span>
+                  <input 
+                    type="number" 
+                    placeholder="Soni" 
+                    id="randomCount"
+                    style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }} 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const count = parseInt((document.getElementById('randomCount') as HTMLInputElement).value);
+                      if (!count || count <= 0) return toast.error('Soni kiriting');
+                      const shuffled = [...exam.questions].sort(() => 0.5 - Math.random());
+                      setSelectedQuestionIds(shuffled.slice(0, count).map(q => q.id));
+                      toast.success(`${count} ta savol tasodifiy tanlandi`);
+                    }}
+                    className={styles.primaryBtn} 
+                    style={{ fontSize: 10, padding: '6px 12px', height: 'auto' }}
+                  >
+                    Tanlash
+                  </button>
+                </div>
+
                 <label className={styles.label}>Savollarni tanlang ({selectedQuestionIds.length} ta tanlandi)</label>
                 <div style={{ maxHeight: 400, overflowY: 'auto', border: '1.5px solid #f1f5f9', borderRadius: 16, padding: 12 }}>
                   {exam.questions.map((q: any, idx: number) => (
                     <div 
                       key={q.id} 
                       onClick={() => toggleQuestionSelection(q.id)}
+                      className="question-selection-item"
+                      data-text={q.text}
                       style={{ 
                         display: 'flex', gap: 12, padding: 10, borderRadius: 10, cursor: 'pointer',
                         background: selectedQuestionIds.includes(q.id) ? 'rgba(99, 102, 241, 0.05)' : 'transparent',
                         border: selectedQuestionIds.includes(q.id) ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid transparent',
-                        marginBottom: 4
+                        marginBottom: 4,
+                        transition: 'all 0.2s'
                       }}
                     >
                       <div style={{ 
@@ -677,7 +730,7 @@ export default function ExamDetailPage() {
                         {selectedQuestionIds.includes(q.id) && <CheckCircle2 size={12} color="#fff" />}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700 }}>Savol #{idx + 1}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: selectedQuestionIds.includes(q.id) ? '#4f46e5' : '#0f172a' }}>Savol #{idx + 1}</div>
                         <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 400 }}>{q.text}</div>
                       </div>
                     </div>
