@@ -170,6 +170,3 @@ export default function StudentDetailPage() {
     </div>
   );
 }
-    </div>
-  );
-}
