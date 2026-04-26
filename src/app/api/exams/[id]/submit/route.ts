@@ -71,8 +71,8 @@ export async function POST(
         const testCases = q.testCases as any[];
         const sourceCode = String(userAnswer || "");
         
-        if (testCases && testCases.length > 0) {
-          try {
+        try {
+          if (testCases && testCases.length > 0) {
             // 1. Evaluate via Judge0 (Unit Tests)
             const evalResult = await evaluateCode(sourceCode, testCases);
             const judgeScoreRatio = evalResult.score / evalResult.total; // 0 to 1
@@ -86,18 +86,23 @@ export async function POST(
             const aiScoreRatio = aiResult.score / 100; // 0 to 1
             
             // 3. Weighted Score: 70% Unit Tests, 30% AI Logic
-            // This ensures students get points for effort/logic even if test cases fail slightly
             const combinedRatio = (judgeScoreRatio * 0.7) + (aiScoreRatio * 0.3);
             
             pointsEarned = combinedRatio * q.points;
-            isCorrect = combinedRatio >= 0.6; // Passing threshold for a single question
+            isCorrect = combinedRatio >= 0.6;
             feedback = `[UNIT TESTS]: ${evalResult.score}/${evalResult.total} o'tdi.\n[AI XULOSA]: ${aiResult.feedback}`;
-          } catch (err: any) {
-            console.error(`[EVAL_FAIL] Q:${q.id}`, err);
-            feedback = "Evaluation engine error.";
+          } else {
+            // FALLBACK: If no test cases, rely 100% on AI Logic Analysis
+            const aiResult = await evaluateCodeWithAI(sourceCode, q.text, "No test cases provided.");
+            const aiScoreRatio = aiResult.score / 100;
+            
+            pointsEarned = aiScoreRatio * q.points;
+            isCorrect = aiScoreRatio >= 0.6;
+            feedback = `[UNIT TESTS]: Mavjud emas.\n[AI XULOSA]: ${aiResult.feedback}`;
           }
-        } else {
-          feedback = "No test cases defined for this unit.";
+        } catch (err: any) {
+          console.error(`[EVAL_FAIL] Q:${q.id}`, err);
+          feedback = "Evaluation engine error.";
         }
       }
 
@@ -113,6 +118,7 @@ export async function POST(
     }
 
     await prisma.$transaction([
+      prisma.examResponse.deleteMany({ where: { attemptId: attempt.id } }),
       prisma.examResponse.createMany({ data: responses }),
       prisma.examAttempt.update({
         where: { id: attempt.id },
