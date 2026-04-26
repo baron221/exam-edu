@@ -10,37 +10,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save, Terminal as TerminalIcon } from 'lucide-react';
 import styles from './ExamPlayer.module.css';
 import { useTranslation } from '@/i18n/translations';
-
-interface TimerProps {
-  initialSeconds: number;
-  onTimeUp: () => void;
-}
-
-const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
-  const [timeLeft, setTimeLeft] = useState(initialSeconds);
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      onTimeUp();
-      return;
-    }
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft, onTimeUp]);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-
-  return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
-      <TimerIcon className="text-indigo-600" size={18} />
-      <span className="font-mono font-bold text-indigo-700 text-lg">
-        {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-      </span>
-    </div>
-  );
-};
+import Timer from './Timer';
 
 export default function ExamPlayer({ examId }: { examId: string }) {
   const router = useRouter();

@@ -181,8 +181,9 @@ export default function LoginPage() {
                     value={groupName} 
                     onChange={e => setGroupName(e.target.value)}
                     style={{ 
-                      width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', 
-                      background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', 
+                      width: '100%', padding: '14px 40px 14px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', 
+                      background: '#f8fafc url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E") no-repeat calc(100% - 12px) center',
+                      fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', 
                       outline: 'none', appearance: 'none', cursor: 'pointer'
                     }}
                   >
