@@ -38,57 +38,82 @@ const Timer: React.FC<TimerProps> = ({ initialSeconds, onTimeUp }) => {
       style={{ 
         display: 'flex', 
         alignItems: 'center', 
-        gap: '12px', 
-        padding: '6px 20px', 
-        borderRadius: '14px', 
-        background: isLowTime ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.9)', 
-        border: `1.5px solid ${isLowTime ? 'rgba(239, 68, 68, 0.15)' : 'rgba(99, 102, 241, 0.1)'}`,
-        backdropFilter: 'blur(20px)',
+        gap: '16px', 
+        padding: '8px 20px', 
+        borderRadius: '16px', 
+        background: isLowTime 
+          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)' 
+          : 'rgba(255, 255, 255, 0.03)', 
+        border: `1px solid ${isLowTime ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: isLowTime ? '0 4px 20px rgba(239, 68, 68, 0.1)' : '0 4px 15px rgba(99, 102, 241, 0.04)',
+        boxShadow: isLowTime 
+          ? '0 0 20px rgba(239, 68, 68, 0.15)' 
+          : 'none',
+        position: 'relative'
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg 
-            width="14" 
-            height="14" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke={isLowTime ? '#ef4444' : '#6366f1'} 
-            strokeWidth="3" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-            style={{ filter: isLowTime ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.3))' : 'none' }}
-        >
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
+        <div style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '8px',
+            background: isLowTime ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            animation: isLowTime ? 'pulse 2s infinite' : 'none'
+        }}>
+            <svg 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke={isLowTime ? '#ff4d4d' : '#818cf8'} 
+                strokeWidth="3" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+            >
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
       </div>
 
       <div style={{ 
-        fontSize: '18px', 
-        fontWeight: 900, 
-        color: isLowTime ? '#ef4444' : '#0f172a', 
-        letterSpacing: '-1px',
-        fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}>
-        {formatTime(seconds)}
-      </div>
-
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        justifyContent: 'center', 
-        borderLeft: '1.5px solid rgba(99, 102, 241, 0.1)', 
-        paddingLeft: '12px',
-        lineHeight: 1.1
-      }}>
-        <span style={{ fontSize: '7px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: isLowTime ? '#ef4444' : '#6366f1' }}>
+        <div style={{ 
+            fontSize: '18px', 
+            fontWeight: 800, 
+            color: isLowTime ? '#ff4d4d' : '#ffffff', 
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            lineHeight: 1,
+            letterSpacing: '0.02em'
+        }}>
+            {formatTime(seconds)}
+        </div>
+        <div style={{ 
+            fontSize: '8px', 
+            fontWeight: 900, 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.1em', 
+            color: isLowTime ? 'rgba(239, 68, 68, 0.7)' : 'rgba(255, 255, 255, 0.3)',
+            marginTop: '3px'
+        }}>
             {isLowTime ? t('urgent') : t('remaining')}
-        </span>
-        <span style={{ fontSize: '6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8', marginTop: '1px' }}>
-            {t('active_session')}
-        </span>
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
