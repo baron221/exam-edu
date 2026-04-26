@@ -45,3 +45,19 @@ export async function GET(
 
   return NextResponse.json(student);
 }
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!await guard()) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const { id } = await params;
+
+  try {
+    await prisma.user.delete({
+      where: { id }
+    });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to delete student' }, { status: 500 });
+  }
+}

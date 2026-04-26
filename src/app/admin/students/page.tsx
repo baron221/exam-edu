@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, User, Mail, GraduationCap, History, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
+import { Search, User, Mail, GraduationCap, History, ExternalLink, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function AdminStudentsPage() {
   const router = useRouter();
@@ -17,6 +18,17 @@ export default function AdminStudentsPage() {
       setLoading(false);
     });
   }, []);
+
+  const handleDeleteStudent = async (id: string) => {
+    if (!confirm('Ushbu talabani butunlay o\'chirishni xohlaysizmi? Barcha natijalar ham o\'chib ketadi.')) return;
+    const res = await fetch(`/api/admin/students/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setStudents(students.filter(s => s.id !== id));
+      toast.success('Talaba o\'chirildi');
+    } else {
+      toast.error('O\'chirishda xatolik yuz berdi');
+    }
+  };
 
   const uniqueGroups = Array.from(new Set(students.map(s => s.groupName || 'Individual'))).sort();
 
@@ -37,6 +49,7 @@ export default function AdminStudentsPage() {
 
   return (
     <div style={{ maxWidth: '1200px' }}>
+      <Toaster position="top-right" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 40, fontWeight: 950, color: '#0f172a', margin: 0, letterSpacing: '-0.04em' }}>Students</h1>
@@ -178,19 +191,33 @@ export default function AdminStudentsPage() {
                   )}
                 </td>
                 <td style={{ padding: '24px', textAlign: 'center' }}>
-                  <button 
-                    onClick={() => router.push(`/admin/students/${student.id}`)}
-                    style={{ 
-                      display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', 
-                      borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#fff', 
-                      fontSize: 12, fontWeight: 800, cursor: 'pointer', color: '#6366f1',
-                      transition: 'all 0.2s', boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.background = 'rgba(99, 102, 241, 0.02)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; }}
-                  >
-                    <History size={14} /> Full History
-                  </button>
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                    <button 
+                      onClick={() => router.push(`/admin/students/${student.id}`)}
+                      style={{ 
+                        display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', 
+                        borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#fff', 
+                        fontSize: 12, fontWeight: 800, cursor: 'pointer', color: '#6366f1',
+                        transition: 'all 0.2s', boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.background = 'rgba(99, 102, 241, 0.02)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; }}
+                    >
+                      <History size={14} /> Full History
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteStudent(student.id)}
+                      style={{ 
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, 
+                        borderRadius: 12, border: '1.5px solid #fee2e2', background: '#fff', 
+                        cursor: 'pointer', color: '#ef4444', transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.background = '#fef2f2'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#fee2e2'; e.currentTarget.style.background = '#fff'; }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
