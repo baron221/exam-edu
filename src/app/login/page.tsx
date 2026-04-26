@@ -176,12 +176,21 @@ export default function LoginPage() {
                   <label style={{ display: 'block', fontSize: 'clamp(9px, 0.75vw, 10px)', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
                     GURUH
                   </label>
-                  <input
-                    type="text" required value={groupName}
-                    onChange={e => setGroupName(e.target.value.toUpperCase())}
-                    placeholder="Masalan: 921-GURUH"
-                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', outline: 'none', textTransform: 'uppercase' }}
-                  />
+                  <select 
+                    required 
+                    value={groupName} 
+                    onChange={e => setGroupName(e.target.value)}
+                    style={{ 
+                      width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #e2e8f0', 
+                      background: '#f8fafc', fontSize: '15px', fontWeight: 500, boxSizing: 'border-box', 
+                      outline: 'none', appearance: 'none', cursor: 'pointer'
+                    }}
+                  >
+                    <option value="" disabled>GURUHNI TANLANGLANG</option>
+                    {['FIT-1', 'FIT-2', 'FIT-3', 'FIT-4', 'FIT-5', 'FIT-6', 'FM-1', 'FM-2', 'FM-3', 'FM-4', 'FM-5', 'FM-6'].map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
                 </div>
               </>
             ) : (
