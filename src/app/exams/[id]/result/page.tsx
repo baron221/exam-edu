@@ -119,6 +119,29 @@ export default function ExamResultPage() {
                     </div>
                 </div>
 
+                {/* AI Analysis Section for Student */}
+                <div style={{ textAlign: 'left', marginBottom: 32 }}>
+                    <div style={{ fontSize: 10, fontWeight: 850, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#6366f1', opacity: 0.2 }} />
+                        Savollar bo'yicha AI Tahlili
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {attempt.responses?.map((resp: any, idx: number) => (
+                            <div key={resp.id} style={{ background: '#f8faff', padding: 16, borderRadius: 16, border: '1px solid rgba(99,102,241,0.08)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>#{idx + 1} Savol</div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: resp.isCorrect ? '#10b981' : '#ef4444' }}>
+                                        {resp.pointsEarned} ball
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, fontStyle: 'italic' }}>
+                                    {resp.feedback || "Tahlil kutilmoqda..."}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Appeals Section */}
                 {attempt.isAppealed ? (
                     <div style={{ padding: '16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24, textAlign: 'left' }}>

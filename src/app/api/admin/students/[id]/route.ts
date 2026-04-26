@@ -32,6 +32,17 @@ export async function GET(
               type: true,
               passingScore: true,
             }
+          },
+          responses: {
+            include: {
+              question: {
+                select: {
+                  text: true,
+                  points: true,
+                  type: true
+                }
+              }
+            }
           }
         },
         orderBy: {

@@ -19,7 +19,14 @@ export async function GET(
     try {
         const attempt = await prisma.examAttempt.findUnique({
             where: { userId_examId: { userId, examId } },
-            include: { exam: true }
+            include: { 
+                exam: true,
+                responses: {
+                    include: {
+                        question: true
+                    }
+                }
+            }
         });
 
         if (!attempt) {
