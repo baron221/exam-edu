@@ -17,40 +17,48 @@ export async function GET(
     const userId = (session.user as any).id;
 
     try {
+        // Step 1: Get attempt without responses first
         const attempt = await prisma.examAttempt.findUnique({
             where: { userId_examId: { userId, examId } },
-            include: { 
-                exam: true,
-                responses: {
-                    include: {
-                        question: true
-                    }
-                }
-            }
+            include: { exam: true }
         });
 
         if (!attempt) {
             return new NextResponse('Not Found', { status: 404 });
         }
 
-        // Filter responses to match variant questions (prevents ghost questions from previous attempts)
+        // Step 2: Determine which question IDs to fetch responses for
+        let questionIdsFilter: string[] | null = null;
         if (attempt.variantId) {
             const variant = await prisma.examVariant.findUnique({
                 where: { id: attempt.variantId },
-                include: { questions: { select: { questionId: true } } }
+                include: { questions: { orderBy: { order: 'asc' }, select: { questionId: true } } }
             });
-            if (variant) {
-                const variantQuestionIds = variant.questions.map(vq => vq.questionId);
-                (attempt as any).responses = attempt.responses.filter(r => variantQuestionIds.includes(r.questionId));
-                
-                // Sort responses to match variant order
-                (attempt as any).responses.sort((a: any, b: any) => {
-                    return variantQuestionIds.indexOf(a.questionId) - variantQuestionIds.indexOf(b.questionId);
-                });
+            if (variant && variant.questions.length > 0) {
+                questionIdsFilter = variant.questions.map(vq => vq.questionId);
             }
         }
 
-        return NextResponse.json(attempt);
+        // Step 3: Fetch ONLY the relevant responses at DB level
+        const responses = await prisma.examResponse.findMany({
+            where: {
+                attemptId: attempt.id,
+                ...(questionIdsFilter ? { questionId: { in: questionIdsFilter } } : {})
+            },
+            include: { question: true },
+            // Sort by variant order if we have a filter
+            orderBy: { id: 'asc' }
+        });
+
+        // Sort responses to match variant question order
+        let sortedResponses = responses;
+        if (questionIdsFilter) {
+            sortedResponses = [...responses].sort((a, b) => {
+                return questionIdsFilter!.indexOf(a.questionId) - questionIdsFilter!.indexOf(b.questionId);
+            });
+        }
+
+        return NextResponse.json({ ...attempt, responses: sortedResponses });
     } catch (error) {
         console.error('Error fetching result:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
