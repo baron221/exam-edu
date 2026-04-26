@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 
 export default function ExamResultPage() {
