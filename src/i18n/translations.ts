@@ -102,7 +102,9 @@ export const translations = {
     minutes: "daq",
     urgent: "SHOSHILINCH",
     remaining: "QOLGAN VAQT",
-    active_session: "FAOL SEANS"
+    active_session: "FAOL SEANS",
+    submitted: "Topshirildi",
+    view_result: "Natijani ko'rish"
   },
   ru: {
     terminal_title: "Терминал НПУУ",
@@ -205,7 +207,9 @@ export const translations = {
     minutes: "мин",
     urgent: "СРОЧНО",
     remaining: "ОСТАЛОСЬ",
-    active_session: "АКТИВНАЯ СЕССИЯ"
+    active_session: "АКТИВНАЯ СЕССИЯ",
+    submitted: "Сдано",
+    view_result: "Посмотреть результат"
   },
   en: {
     terminal_title: "NPUU Terminal",
@@ -308,7 +312,9 @@ export const translations = {
     minutes: "min",
     urgent: "URGENT",
     remaining: "REMAINING",
-    active_session: "ACTIVE SESSION"
+    active_session: "ACTIVE SESSION",
+    submitted: "Submitted",
+    view_result: "View Result"
   }
 };
 
