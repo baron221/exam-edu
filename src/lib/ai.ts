@@ -52,17 +52,27 @@ export async function evaluateCodeWithAI(
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    // Extract JSON from the response (sometimes Gemini adds markdown)
+    console.log("[AI_RAW_RESPONSE]", text);
+
+    // Extract JSON from the response (Gemini often adds markdown blocks like ```json ... ```)
+    let jsonStr = text;
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const jsonStr = jsonMatch ? jsonMatch[0] : text;
-    const parsed = JSON.parse(jsonStr);
-    
-    return {
-      score: typeof parsed.score === 'number' ? parsed.score : 0,
-      feedback: parsed.feedback || "Tahlil yakunlandi."
-    };
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+
+    try {
+      const parsed = JSON.parse(jsonStr);
+      return {
+        score: typeof parsed.score === 'number' ? parsed.score : 0,
+        feedback: (parsed.feedback || "Tahlil yakunlandi.").replace(/[`*#]/g, '').trim()
+      };
+    } catch (parseError) {
+      console.error("[AI_PARSE_ERROR]", parseError, "Raw text:", text);
+      return { score: 0, feedback: "AI tahlilida format xatoligi yuz berdi. Iltimos qayta urinib ko'ring." };
+    }
   } catch (error) {
     console.error("[AI_EVAL_ERROR]", error);
-    return { score: 0, feedback: "AI tahlilida xatolik yuz berdi." };
+    return { score: 0, feedback: "AI tahlilida xatolik yuz berdi. (Network or API error)" };
   }
 }
