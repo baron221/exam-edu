@@ -63,8 +63,14 @@ export async function GET(
 
   // Filter responses for each attempt based on variant questions
   const processedAttempts = student.attempts.map(attempt => {
-    if (attempt.variantId && attempt.variant) {
-      const variantQuestionIds = (attempt.variant as any).questions?.map((vq: any) => vq.questionId) || [];
+    const variantId = attempt.variantId;
+    const variant = attempt.variant as any;
+    
+    if (variantId && variant && variant.questions) {
+      const variantQuestionIds = variant.questions.map((vq: any) => vq.questionId);
+      
+      console.log(`[ADMIN_HISTORY] Filtering attempt ${attempt.id}. Variant: ${variant.name}. VariantQs: ${variantQuestionIds.length}. TotalResponses: ${attempt.responses.length}`);
+      
       const filteredResponses = attempt.responses.filter(r => variantQuestionIds.includes(r.questionId));
       
       // Sort responses to match variant order

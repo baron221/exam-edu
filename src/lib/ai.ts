@@ -18,6 +18,10 @@ export async function evaluateCodeWithAI(
     return { score: 0, feedback: "AI API Key is missing. Manual review required." };
   }
 
+  if (!sourceCode || !sourceCode.trim()) {
+    return { score: 0, feedback: "Javob yozilmagan." };
+  }
+
   const prompt = `
     Siz dasturlash bo'yicha ekspert va imtihon tekshiruvchisisiz. 
     Talaba quyidagi masalani ishladi:
