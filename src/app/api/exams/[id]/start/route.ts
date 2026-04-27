@@ -153,14 +153,34 @@ export async function POST(
       }
 
       // Lock in the question set by creating empty responses
+      // If we have a variant, we should ensure only variant questions exist in responses
+      if (attempt.variantId) {
+        await prisma.examResponse.deleteMany({
+          where: { 
+            attemptId: attempt.id,
+            questionId: { notIn: selectedQuestions.map(q => q.id) }
+          }
+        });
+      }
+
       await prisma.examResponse.createMany({
+        skipDuplicates: true, // Crucial to avoid error if some already exist
         data: selectedQuestions.map(q => ({
           attemptId: attempt.id,
           questionId: q.id,
           answer: "",
         }))
       });
-    } else {
+    } else if (attempt.variantId) {
+       // Even if responses exist, if we are in a variant, let's prune any extra ones 
+       // that might have leaked from a non-variant start
+       await prisma.examResponse.deleteMany({
+          where: { 
+            attemptId: attempt.id,
+            questionId: { notIn: selectedQuestions.map(q => q.id) }
+          }
+       });
+    }
       // If we have a variant, strictly use the variant's questions regardless of existing responses
       if (attempt.variantId) {
         const selectedVariant = exam.variants.find(v => v.id === attempt.variantId);

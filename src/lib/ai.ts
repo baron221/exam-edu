@@ -69,10 +69,12 @@ export async function evaluateCodeWithAI(
       };
     } catch (parseError) {
       console.error("[AI_PARSE_ERROR]", parseError, "Raw text:", text);
-      return { score: 0, feedback: "AI tahlilida format xatoligi yuz berdi. Iltimos qayta urinib ko'ring." };
+      return { score: 0, feedback: "AI tahlilida format xatoligi. Iltimos Vercel logs'ni tekshiring." };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("[AI_EVAL_ERROR]", error);
-    return { score: 0, feedback: "AI tahlilida xatolik yuz berdi. (Network or API error)" };
+    const msg = error?.message || "";
+    if (msg.includes("API key")) return { score: 0, feedback: "Vercel Environment Variables'da API kaliti xato yoki yo'q." };
+    return { score: 0, feedback: `AI tahlilida xatolik: ${msg.substring(0, 50)}...` };
   }
 }
