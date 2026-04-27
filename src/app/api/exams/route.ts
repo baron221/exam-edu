@@ -10,10 +10,17 @@ export async function GET() {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
+  const userId = (session.user as any).id;
+
   try {
     const exams = await prisma.exam.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { course: true },
+      include: { 
+        course: true,
+        attempts: {
+          where: { userId }
+        }
+      },
     });
     return NextResponse.json(exams);
   } catch (error) {

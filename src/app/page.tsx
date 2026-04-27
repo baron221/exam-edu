@@ -143,15 +143,31 @@ export default function DashboardPage() {
               <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 20, paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: 9, fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 3 }}>Status</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase' }}>{t('status_ready')}</div>
+                  <div style={{ 
+                    fontSize: 12, fontWeight: 700, 
+                    color: exam.attempts?.[0]?.status === 'SUBMITTED' ? '#6366f1' : '#10b981', 
+                    textTransform: 'uppercase' 
+                  }}>
+                    {exam.attempts?.[0]?.status === 'SUBMITTED' ? t('submitted') : t('status_ready')}
+                  </div>
                 </div>
-                <Link href={`/exams/${exam.id}`} style={{
-                  padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                  color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                  boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
-                }}>
-                  {t('enter_portal')}
-                </Link>
+                {exam.attempts?.[0]?.status === 'SUBMITTED' ? (
+                  <Link href={`/exams/${exam.id}/result`} style={{
+                    padding: '10px 20px', borderRadius: 12, background: 'rgba(99, 102, 241, 0.1)',
+                    color: '#6366f1', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    border: '1.5px solid rgba(99, 102, 241, 0.2)',
+                  }}>
+                    {t('view_result')}
+                  </Link>
+                ) : (
+                  <Link href={`/exams/${exam.id}`} style={{
+                    padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                    color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
+                  }}>
+                    {t('enter_portal')}
+                  </Link>
+                )}
               </div>
             </div>
           ))}

@@ -35,6 +35,14 @@ export async function POST(
       }
     });
 
+    // PREVENTION: Do not allow re-entry if already submitted
+    if (existingAttempt && existingAttempt.status === "SUBMITTED") {
+      return NextResponse.json({ 
+        error: "Siz ushbu imtihonni topshirib bo'lgansiz. Qayta topshirish taqiqlanadi.",
+        alreadySubmitted: true 
+      }, { status: 403 });
+    }
+
     // LOCK: If responses already exist, student cannot change variant
     const isLocked = existingAttempt && existingAttempt.responses.length > 0;
     const finalVariantId = isLocked ? existingAttempt.variantId : (variantId || existingAttempt?.variantId);
