@@ -7,7 +7,7 @@ import Image from 'next/image';
 import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save, Terminal as TerminalIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer as TimerIcon, Play, Save, Terminal as TerminalIcon, XCircle } from 'lucide-react';
 import styles from './ExamPlayer.module.css';
 import { useTranslation } from '@/i18n/translations';
 import Timer from './Timer';
@@ -22,6 +22,42 @@ export default function ExamPlayer({ examId }: { examId: string }) {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [warningCount, setWarningCount] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize Audio
+  useEffect(() => {
+    audioRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+  }, []);
+
+  // Anti-Cheat: Tab switching detection
+  useEffect(() => {
+    const handleViolation = async () => {
+      if (document.visibilityState === 'hidden') {
+        try {
+          const res = await fetch(`/api/exams/${examId}/warning`, { method: 'POST' });
+          const data = await res.json();
+          setWarningCount(data.warningCount);
+          setShowWarning(true);
+          
+          if (audioRef.current) {
+            audioRef.current.play().catch(e => console.log("Audio play blocked"));
+          }
+        } catch (err) {
+          console.error("Failed to log warning", err);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleViolation);
+    window.addEventListener('blur', handleViolation);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleViolation);
+      window.removeEventListener('blur', handleViolation);
+    };
+  }, [examId]);
   
   // Variant selection state
   const [requiresVariant, setRequiresVariant] = useState(false);
@@ -440,6 +476,13 @@ export default function ExamPlayer({ examId }: { examId: string }) {
             </div>
         </div>
 
+        {warningCount > 0 && (
+          <div style={{ marginLeft: 24, padding: '6px 12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 900, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Violations:</span>
+            <span style={{ fontSize: 14, fontWeight: 950, color: '#ef4444' }}>{warningCount}</span>
+          </div>
+        )}
+
         <button 
           className={styles.footerBtn}
           disabled={currentIndex === totalQuestions - 1}
@@ -449,6 +492,64 @@ export default function ExamPlayer({ examId }: { examId: string }) {
           <ChevronRight size={20} />
         </button>
       </footer>
+
+      {/* ANTI-CHEAT WARNING MODAL */}
+      {showWarning && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+          background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            maxWidth: 500, width: '100%', background: '#fff', borderRadius: 32, padding: 40,
+            textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            border: '4px solid #ef4444', animation: 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both'
+          }}>
+            <div style={{ 
+              width: 80, height: 80, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444',
+              margin: '0 auto 24px'
+            }}>
+              <XCircle size={48} />
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginBottom: 16 }}>DIQQAT! QOIDABUZARLIK!</h2>
+            <p style={{ fontSize: 16, color: '#64748b', lineHeight: 1.6, marginBottom: 24 }}>
+              Imtihon vaqtida boshqa tabga o'tish yoki brauzerni kichraytirish qat'iyan taqiqlanadi! 
+              Sizning urinishingiz qayd etildi va o'qituvchiga yuborildi.
+            </p>
+            
+            <div style={{ 
+              background: '#fef2f2', padding: '16px 24px', borderRadius: 16, 
+              border: '1.5px solid #fee2e2', marginBottom: 32 
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', marginBottom: 4 }}>Urinishlar soni</div>
+              <div style={{ fontSize: 32, fontWeight: 950, color: '#ef4444' }}>{warningCount}</div>
+            </div>
+
+            <button 
+              onClick={() => setShowWarning(false)}
+              style={{
+                width: '100%', padding: '16px', borderRadius: 16,
+                background: '#0f172a', color: '#fff', fontSize: 16, fontWeight: 800,
+                border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              Tushundim, qaytarilmaydi
+            </button>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+              @keyframes shake {
+                10%, 90% { transform: translate3d(-1px, 0, 0); }
+                20%, 80% { transform: translate3d(2px, 0, 0); }
+                30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+                40%, 60% { transform: translate3d(4px, 0, 0); }
+              }
+            `}} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
