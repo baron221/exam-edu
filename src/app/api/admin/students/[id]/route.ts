@@ -33,6 +33,7 @@ export async function GET(
               passingScore: true,
             }
           },
+          variant: true,
           responses: {
             include: {
               question: {

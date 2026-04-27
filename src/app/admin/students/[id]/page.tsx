@@ -30,8 +30,16 @@ function AttemptRow({ attempt }: { attempt: any }) {
           </div>
           <div>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: 0 }}>{attempt.exam.title}</h3>
-            <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: 4, alignItems: 'center' }}>
               <span style={{ fontSize: 10, fontWeight: 900, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{attempt.exam.type}</span>
+              {attempt.variant && (
+                <>
+                  <span style={{ color: '#cbd5e1' }}>&bull;</span>
+                  <span style={{ fontSize: 10, fontWeight: 900, color: '#6366f1', textTransform: 'uppercase', background: 'rgba(99, 102, 241, 0.08)', padding: '2px 8px', borderRadius: 6 }}>
+                    Variant: {attempt.variant.name}
+                  </span>
+                </>
+              )}
               <span style={{ color: '#cbd5e1' }}>&bull;</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{new Date(attempt.startTime).toLocaleDateString()}</span>
             </div>
@@ -74,6 +82,19 @@ function AttemptRow({ attempt }: { attempt: any }) {
                   {resp.pointsEarned} / {resp.question?.points || 0} ball
                 </div>
               </div>
+
+              {/* Student's Real Answer */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 9, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>Studentning javobi:</div>
+                <pre style={{ 
+                  background: '#1e293b', color: '#e2e8f0', padding: '16px', borderRadius: 12, 
+                  fontSize: 12, overflowX: 'auto', margin: 0, fontFamily: 'monospace',
+                  lineHeight: 1.5, border: '1px solid #334155'
+                }}>
+                  {resp.answer || "Javob yozilmagan."}
+                </pre>
+              </div>
+
               <div style={{ background: '#f1f5f9', padding: '12px 16px', borderRadius: 12, fontSize: 12, color: '#475569', lineHeight: 1.6, borderLeft: '3px solid #6366f1' }}>
                 <div style={{ fontSize: 9, fontWeight: 900, color: '#6366f1', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>AI Mantiqiy Xulosasi:</div>
                 {resp.feedback || "Tahlil mavjud emas."}
