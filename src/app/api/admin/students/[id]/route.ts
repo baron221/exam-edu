@@ -33,7 +33,13 @@ export async function GET(
               passingScore: true,
             }
           },
-          variant: true,
+          variant: {
+            include: {
+              questions: {
+                select: { questionId: true }
+              }
+            }
+          },
           responses: {
             include: {
               question: {
@@ -55,7 +61,23 @@ export async function GET(
 
   if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 });
 
-  return NextResponse.json(student);
+  // Filter responses for each attempt based on variant questions
+  const processedAttempts = student.attempts.map(attempt => {
+    if (attempt.variantId && attempt.variant) {
+      const variantQuestionIds = (attempt.variant as any).questions?.map((vq: any) => vq.questionId) || [];
+      const filteredResponses = attempt.responses.filter(r => variantQuestionIds.includes(r.questionId));
+      
+      // Sort responses to match variant order
+      filteredResponses.sort((a, b) => {
+        return variantQuestionIds.indexOf(a.questionId) - variantQuestionIds.indexOf(b.questionId);
+      });
+
+      return { ...attempt, responses: filteredResponses };
+    }
+    return attempt;
+  });
+
+  return NextResponse.json({ ...student, attempts: processedAttempts });
 }
 export async function DELETE(
   req: NextRequest,
